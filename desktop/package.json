@@ -1,6 +1,6 @@
 {
   "name": "kothaflow-desktop",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "KothaFlow Desktop Voice Typing (Wispr Flow Style Floating Bubble)",
   "main": "electron-main.cjs",
   "author": "KothaFlow",
@@ -23,9 +23,13 @@
       "auto-healer.cjs",
       "overlay.html",
       "paste.vbs",
+      "paste.exe",
       "avatar.png",
       "icon.ico",
       "groq_key.txt"
+    ],
+    "asarUnpack": [
+      "paste.exe"
     ],
     "win": {
       "target": [

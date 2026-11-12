@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.4.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.4.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.4.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.4.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.5.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.5.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.5.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.5.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -63,13 +63,17 @@ jobs:
           if ($env:GROQ_SECRET_KEY) {
             Set-Content -Path "groq_key.txt" -Value $env:GROQ_SECRET_KEY -NoNewline
           }
+          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          if (Test-Path $csc) {
+            & $csc /target:winexe /out:paste.exe PasteHelper.cs
+          }
           npm install
           npx electron-builder --win nsis portable --publish never
           cd ..
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.4.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.5.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -113,29 +117,30 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.4
+          tag_name: v1.1.5
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.1.4 — Instant Cursor Typing & Preloaded Whisper Engine
+          name: KothaFlow v1.1.5 — Native Win32 Paste Engine & Seamless Cursor Auto-Typing
           body: |
-            ## 🎙️ KothaFlow Studio v1.1.4 — Instant Auto-Typing at Cursor
+            ## 🎙️ KothaFlow Studio v1.1.5 — 100% Reliable Native Win32 Auto-Typing
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.1.4.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.4/KothaFlow-Desktop-Setup-v1.1.4.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.1.5.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Setup-v1.1.5.exe)**
               - *1-Click Windows Installer:* Installs KothaFlow and **automatically creates a Desktop Shortcut**!
-              - *Instant Cursor Typing:* Fixed paste script and focus handling so speech immediately types into your write box!
+              - *Native Win32 Paste Engine:* Uses native C# `paste.exe` to inject `Ctrl+V` with zero focus loss, typing instantly into Notepad, Word, Chrome, WhatsApp!
               - *Pre-configured Engine:* Groq Whisper API Key is already pre-configured. Zero dialogs, zero setup!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.4/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.4/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.1.4.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.4/KothaFlow-VoiceTyping-v1.1.4.apk)**
+            - **[KothaFlow-VoiceTyping-v1.1.5.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-VoiceTyping-v1.1.5.apk)**
               - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
 
-            ### 🚀 Fixed in v1.1.4:
-            - **সরাসরি রাইট বক্সে টাইপিং ফিক্স:** প্যাকেটকৃত অ্যাপের পেস্ট হ্যান্ডলার এবং ফোকাস সমস্যা স্থায়ীভাবে সমাধান করা হয়েছে।
-            - **ইনস্ট্যান্ট গ্রোক হুইস্পার অ্যাক্সেস:** এপিআই কী ইন-মেমোরি লোডার দিয়ে স্বয়ংক্রিয়ভাবে সক্রিয় করা হয়েছে।
+            ### 🚀 Fixed in v1.1.5:
+            - **নেটিভ Win32 পেস্ট ইঞ্জিন:** WScript এর পরিবর্তে বিল্ট-ইন নেটিভ `paste.exe` যুক্ত করা হয়েছে যা ফোকাস না হারিয়ে সরাসরি যে কোনো রাইট বক্সে লেখা টাইপ করে দেয়।
+            - **উইন্ডো ব্লার হ্যান্ডলার:** কথা শেষ হওয়ার সাথে সাথে বাবল আগের সক্রিয় অ্যাপ্লিকেশনকে (যেমন: নোটপ্যাড বা ওয়ার্ড) ফোকাস ফিরিয়ে দেয়।
+            - **ইনস্ট্যান্ট গ্রোক হুইস্পার:** এপিআই কী কোনো প্রম্পট ছাড়াই স্বয়ংক্রিয়ভাবে সক্রিয়।
             - **কিবোর্ড শর্টকাট:** যেকোনো অ্যাপে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
             - **মাউস হোল্ড-টু-স্পিক:** বাবলে মাউস দিয়ে চেপে ধরে কথা বলুন, ছেড়ে দিলে স্বয়ংক্রিয়ভাবে কার্সরে টাইপ হয়ে যাবে।
             - **কিবোর্ড শর্টকাট:** যেকোনো অ্যাপে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বলা যাবে।

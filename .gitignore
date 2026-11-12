@@ -15,5 +15,7 @@ coverage/
 groq_key.txt
 *.key
 desktop/groq_key.txt
+desktop/paste.exe
+*.exe
 user-config.json
 

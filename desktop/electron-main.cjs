@@ -51,17 +51,36 @@ function createBubbleWindow() {
   bubbleWindow.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
-let tempVbsPath = null;
-function getTempVbs() {
-  if (tempVbsPath && fs.existsSync(tempVbsPath)) return tempVbsPath;
+let cachedPasteExe = null;
+function getPasteExePath() {
+  if (cachedPasteExe && fs.existsSync(cachedPasteExe)) return cachedPasteExe;
   try {
-    tempVbsPath = path.join(app.getPath('temp'), 'kothaflow_paste.vbs');
-    const vbs = 'Set sh = CreateObject("WScript.Shell")\r\nWScript.Sleep 40\r\nsh.SendKeys "^v"\r\n';
-    fs.writeFileSync(tempVbsPath, vbs, 'utf8');
-    return tempVbsPath;
-  } catch (e) {
-    return null;
-  }
+    const tempExe = path.join(app.getPath('temp'), 'kothaflow_paste.exe');
+    const sources = [
+      path.join(__dirname, 'paste.exe'),
+      path.join(process.resourcesPath || '', 'paste.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'paste.exe'),
+      path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'paste.exe')
+    ];
+    for (const src of sources) {
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, tempExe);
+        cachedPasteExe = tempExe;
+        return tempExe;
+      }
+    }
+    if (fs.existsSync(tempExe)) {
+      cachedPasteExe = tempExe;
+      return tempExe;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function fallbackPaste() {
+  try {
+    exec(`powershell -NoProfile -WindowStyle Hidden -Command "[System.Windows.Forms.SendKeys]::SendWait('^v')"`);
+  } catch (_) {}
 }
 
 function pasteAtCursor(rawText) {
@@ -77,25 +96,32 @@ function pasteAtCursor(rawText) {
   const toPaste = cleaned.trim() + ' ';
   clipboard.writeText(toPaste);
 
-  // Directly paste into active cursor in Word, Notepad, Chrome, WhatsApp
+  // Return focus to target application window (Notepad, Word, Chrome, WhatsApp)
+  if (bubbleWindow) {
+    try {
+      bubbleWindow.blur();
+    } catch (_) {}
+  }
+
+  // Directly paste into active cursor via native Win32 paste.exe
   setTimeout(() => {
     if (process.platform === 'win32') {
-      const vbs = getTempVbs();
-      if (vbs) {
-        exec(`wscript //nologo "${vbs}"`, (err) => {
+      const pasteExe = getPasteExePath();
+      if (pasteExe && fs.existsSync(pasteExe)) {
+        exec(`"${pasteExe}"`, (err) => {
           if (err) {
-            exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -m 40; $w.SendKeys('^v')"`);
+            fallbackPaste();
           }
         });
       } else {
-        exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -m 40; $w.SendKeys('^v')"`);
+        fallbackPaste();
       }
     } else if (process.platform === 'darwin') {
       exec(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
     } else {
       exec(`xdotool key ctrl+v`);
     }
-  }, 40);
+  }, 45);
 }
 
 app.whenReady().then(() => {
