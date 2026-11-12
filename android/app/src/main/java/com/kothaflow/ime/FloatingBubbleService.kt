@@ -441,11 +441,31 @@ class FloatingBubbleService : Service() {
 
     private fun cleanSpokenText(raw: String): String {
         var clean = raw
-        val fillers = listOf(" um ", " uh ", " ah ", " আর কি ", " এই যে ", " আআ ")
+        val fillers = listOf(
+            " um ", " uh ", " ah ", " আর কি ", " এই যে ", " আআ ", " উম ", " মানে "
+        )
         for (filler in fillers) {
             clean = clean.replace(Regex("(?i)$filler"), " ")
         }
-        return clean.trim().replace(Regex("\\s+"), " ")
+
+        // Auto-heal common misheard phonetic terms safely on device
+        val corrections = mapOf(
+            "আসসালামালাইকুম" to "আসসালামু আলাইকুম",
+            "ইনশাল্লাহ" to "ইনশাআল্লাহ",
+            "মাশাল্লাহ" to "মাশাআল্লাহ",
+            "ধইন্যবাদ" to "ধন্যবাদ"
+        )
+        for ((wrong, correct) in corrections) {
+            clean = clean.replace(Regex("(?i)\\b$wrong\\b"), correct)
+        }
+
+        // Punctuation & spacing auto-formatting
+        clean = clean.trim()
+            .replace(Regex("\\s+"), " ")
+            .replace(Regex("\\s+([,।\\?!])"), "$1")
+            .replace(Regex("([,।\\?!])(?=[^\\s])"), "$1 ")
+
+        return clean
     }
 
     private fun vibrateDevice() {

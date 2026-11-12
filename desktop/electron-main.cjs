@@ -1,8 +1,9 @@
-const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu, Tray } = require('electron');
+const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu, Tray, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const { spawn, exec } = require('child_process');
+const autoHealer = require('./auto-healer.cjs');
 
 let bubbleWindow = null;
 let tray = null;
@@ -71,7 +72,7 @@ function sendWorkerCommand(cmd) {
   }
 }
 
-// 2. Launch Silent Background Edge Speech Bridge
+// 2. Launch Silent Background Edge Speech Bridge with Auto-Healing Watchdog
 function launchEdgeWorker() {
   if (process.platform !== 'win32') return;
 
@@ -94,9 +95,16 @@ function launchEdgeWorker() {
         '--disable-extensions'
       ];
       edgeProcess = spawn(exe, args, { detached: true, stdio: 'ignore' });
-      console.log('[KothaFlow] Background Edge Speech Bridge launched.');
+      console.log('[KothaFlow AutoHeal] Background Edge Speech Bridge launched.');
+
+      // Auto-healing Watchdog: If Edge process ever dies, auto-heal and respawn in 1.5s
+      edgeProcess.on('exit', () => {
+        console.log('[KothaFlow AutoHeal] Speech worker exited, auto-healing respawn in 1.5s...');
+        edgeProcess = null;
+        setTimeout(launchEdgeWorker, 1500);
+      });
     } catch (err) {
-      console.warn('[KothaFlow] Could not launch Edge Speech Bridge:', err.message);
+      console.warn('[KothaFlow AutoHeal] Could not launch Edge Speech Bridge:', err.message);
     }
   }
 }
@@ -160,9 +168,14 @@ function stopListeningAndPaste() {
   }, 800);
 }
 
-function pasteAtCursor(text) {
-  if (!text || text.trim() === '') return;
-  const toPaste = text.trim() + ' ';
+function pasteAtCursor(rawText) {
+  if (!rawText || rawText.trim() === '') return;
+
+  // Auto-Healing & Adaptive Vocabulary Enhancement
+  const cleaned = autoHealer.adaptAndEnhanceText(rawText);
+  if (!cleaned || cleaned.trim() === '') return;
+
+  const toPaste = cleaned.trim() + ' ';
   clipboard.writeText(toPaste);
 
   // Directly paste into the active cursor in Word, Notepad, Chrome, WhatsApp
@@ -198,6 +211,12 @@ app.whenReady().then(() => {
   launchEdgeWorker();
   ensureDesktopShortcut();
 
+  // Auto-Healing: Clamp window position on screen resolution change
+  const { screen } = require('electron');
+  screen.on('display-metrics-changed', () => {
+    autoHealer.healWindowPosition(bubbleWindow);
+  });
+
   // Create System Tray
   try {
     const iconPath = path.join(__dirname, 'icon.ico');
@@ -226,6 +245,33 @@ app.whenReady().then(() => {
         click: () => {
           currentLang = 'en-US';
           bubbleWindow && bubbleWindow.webContents.send('switch-lang', 'en-US');
+        }
+      },
+      { type: 'separator' },
+      { label: '🛡️ অটো-হিলিং ও প্রাইভেসি: সক্রিয়', enabled: false },
+      {
+        label: '🔄 নতুন আপডেট চেক করুন',
+        click: () => {
+          autoHealer.checkForUpdates((err, res) => {
+            if (res && res.hasUpdate) {
+              dialog.showMessageBox({
+                type: 'info',
+                title: 'KothaFlow আপডেট উপলব্ধ',
+                message: `KothaFlow-এর নতুন ভার্সন (${res.latestVersion}) প্রকাশিত হয়েছে!`,
+                buttons: ['ডাউনলোড করুন', 'পরে']
+              }).then(choice => {
+                if (choice.response === 0 && res.downloadUrl) {
+                  shell.openExternal(res.downloadUrl);
+                }
+              });
+            } else {
+              dialog.showMessageBox({
+                type: 'info',
+                title: 'KothaFlow আপ-টু-ডেট',
+                message: 'আপনার KothaFlow সংস্করণটি সম্পূর্ণ লেটেস্ট ও অটো-হিলিং সুরক্ষিত।'
+              });
+            }
+          });
         }
       },
       { type: 'separator' },
@@ -331,6 +377,32 @@ app.whenReady().then(() => {
       },
       { type: 'separator' },
       { label: '⌨️ শর্টকাট: F8 বা Ctrl+Shift+Space', enabled: false },
+      { label: '🛡️ অটো-হিলিং ইঞ্জিন: সক্রিয়', enabled: false },
+      {
+        label: '🔄 নতুন আপডেট চেক করুন',
+        click: () => {
+          autoHealer.checkForUpdates((err, res) => {
+            if (res && res.hasUpdate) {
+              dialog.showMessageBox({
+                type: 'info',
+                title: 'KothaFlow আপডেট',
+                message: `নতুন ভার্সন (${res.latestVersion}) প্রকাশিত হয়েছে!`,
+                buttons: ['ডাউনলোড করুন', 'পরে']
+              }).then(choice => {
+                if (choice.response === 0 && res.downloadUrl) {
+                  shell.openExternal(res.downloadUrl);
+                }
+              });
+            } else {
+              dialog.showMessageBox({
+                type: 'info',
+                title: 'KothaFlow আপ-টু-ডেট',
+                message: 'আপনার অ্যাপটি সম্পূর্ণ আপ-টু-ডেট।'
+              });
+            }
+          });
+        }
+      },
       { label: '👁️ বাবল হাইড করুন (Hide)', click: () => bubbleWindow.hide() },
       { label: '❌ KothaFlow বন্ধ করুন (Exit)', click: () => app.quit() }
     ]);

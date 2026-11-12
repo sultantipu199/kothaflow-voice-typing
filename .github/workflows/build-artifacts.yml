@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.0.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.0.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.0.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.0.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.1.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.1.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.1.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.1.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -64,7 +64,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.0.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.1.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -108,28 +108,29 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
+          tag_name: v1.1.1
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.1.0 — Desktop Shortcut, Hold-to-Speak & Direct Voice Auto-Typing
+          name: KothaFlow v1.1.1 — Auto-Healing & Self-Evolving Voice Typing (Safe & Privacy-First)
           body: |
-            ## 🎙️ KothaFlow Studio v1.1.0 — Direct Download Links
+            ## 🎙️ KothaFlow Studio v1.1.1 — Auto-Healing & Self-Evolving Engine
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.1.0.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Setup-v1.1.0.exe)**
-              - *Official Windows Installer:* Installs KothaFlow with 1-click and **automatically creates a Desktop Shortcut icon** on your Windows desktop!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.1.1.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.1/KothaFlow-Desktop-Setup-v1.1.1.exe)**
+              - *1-Click Windows Installer:* Installs KothaFlow with 1 click and **automatically creates a Desktop Shortcut icon** on your Windows desktop!
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.1/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation. Also auto-creates a Desktop shortcut on launch!
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.1/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
-            ### ⌨️ Desktop Features:
-            - **Hold-to-Speak:** মাউস দিয়ে বাবলে চাপ দিয়ে ধরে কথা বলুন, ছেড়ে দিলেই সক্রিয় রাইট বক্সে লেখা স্বয়ংক্রিয়ভাবে টাইপ হয়ে যাবে!
-            - **Dedicated Global Shortcut Key:** কীবোর্ডে **`F8`** অথবা **`Ctrl+Shift+Space`** চাপলেই ভয়েস রেকর্ড শুরু হবে এবং পুনরায় চাপলে সাথে সাথে কার্সরে টাইপ হয়ে যাবে!
-            - **Auto-Silence Detection:** কথা বলা শেষ করে থামলেই বাবলটি নিজে নিজে কথাটি বক্সে টাইপ করে দেবে!
-
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.1.0.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-VoiceTyping-v1.1.0.apk)**
+            - **[KothaFlow-VoiceTyping-v1.1.1.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.1/KothaFlow-VoiceTyping-v1.1.1.apk)**
               - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
+
+            ### 🛡️ Auto-Healing & Self-Evolution Features:
+            - **Process Watchdog & Auto-Healing:** ব্যাকগ্রাউন্ড স্পিচ ইঞ্জিনে কোনো সমস্যা হলে ১.৫ সেকেন্ডের মধ্যে নিজে থেকেই অটো-রিস্টার্ট ও রিকানেক্ট করে নেয়।
+            - **Adaptive Local Vocabulary (Self-Evolving):** ইউজারের বলা শব্দ ও ফ্রেজ লোকালি ডিভাইসের ভেতরে সুরক্ষিতভাবে শেখে, ফলে প্রতিনিয়ত ব্যবহারের সাথে সাথে একিউরেসি নিজে থেকেই বৃদ্ধি পায়।
+            - **Privacy & Safety First:** কোনো ভয়েস অডিও ডিস্কে সেভ হয় না এবং কোনো ক্লাউড ট্র্যাকিং নেই। ১০০% লোকাল এবং নিরাপদ।
+            - **Future-Proof Update Checker:** ১-ক্লিকে নতুন আপডেট চেক ও ইনস্টল করার সুবিধা।
           files: release-files/**
           draft: false
           prerelease: false
