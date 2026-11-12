@@ -1,12 +1,30 @@
 {
   "name": "kothaflow-desktop",
-  "version": "1.0.0",
-  "description": "KothaFlow Desktop Voice Typing (Wispr Flow Style Floating Bubble + Global Hotkey)",
+  "version": "1.0.8",
+  "description": "KothaFlow Desktop Voice Typing (Wispr Flow Style Floating Bubble)",
   "main": "electron-main.cjs",
+  "author": "KothaFlow",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
   },
   "dependencies": {
     "electron": "^33.2.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.kothaflow.studio",
+    "productName": "KothaFlow",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "icon.ico"
+    }
   }
 }

@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.7.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.7.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.7.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.7.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.8.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.8.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.8.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.8.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -43,23 +43,36 @@ jobs:
           retention-days: 30
 
   build-desktop:
-    name: Build Desktop Package
+    name: Build Desktop Package & Windows EXE
     runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Compress Desktop Windows Bundle
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Portable Windows EXE & Bundle
         shell: pwsh
         run: |
+          cd desktop
+          npm install
+          npx electron-builder --win portable
+          cd ..
           New-Item -ItemType Directory -Force -Path build-output
+          $exeFile = Get-ChildItem -Path desktop/dist/*.exe | Select-Object -First 1
+          if ($exeFile) {
+            Copy-Item $exeFile.FullName -Destination build-output/KothaFlow-Desktop-Portable.exe -Force
+          }
           Compress-Archive -Path desktop/* -DestinationPath build-output/KothaFlow-Desktop-Windows-v1.0.zip -Force
 
-      - name: Upload Desktop Bundle Artifact
+      - name: Upload Desktop Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: KothaFlow-Desktop-Windows-Bundle
-          path: build-output/KothaFlow-Desktop-Windows-v1.0.zip
+          path: build-output/*.*
           retention-days: 30
 
   release:
@@ -88,24 +101,21 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.7
+          tag_name: v1.0.8
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.0.7 — Production Hardened & Final Delivery
+          name: KothaFlow v1.0.8 — 1-Click Portable Windows EXE & Mobile APK
           body: |
-            ## 🎙️ KothaFlow Studio v1.0.7 — Production Final Delivery
+            ## 🎙️ KothaFlow Studio v1.0.8 — Direct Download Links
+
+            ### 💻 Desktop (Windows Laptop / PC):
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.0.8/KothaFlow-Desktop-Portable.exe)**
+              - *Easiest 1-Click Run:* Just download and double-click! NO Node.js required, NO installation required, NO zip extraction needed. Opens immediately as a watery floating bubble!
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.8/KothaFlow-Desktop-Windows-v1.0.zip)**
+              - *Alternative Zip Bundle:* Extract and double-click `run-windows.bat`. Works on any Windows laptop (auto-launches native app window).
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.0.7.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.7/KothaFlow-VoiceTyping-v1.0.7.apk)**
-              - *Security & Privacy Hardened:* End-to-end encrypted TLS strictly enforced (`usesCleartextTraffic="false"`), zero persistent audio file storage on disk (in-memory speech recognition), and safe foreground microphone service validation (Android 14+ safe).
-              - *Free Smooth Dragging:* Drag and place the watery bubble anywhere across your phone screen.
-              - *Direct Auto-Typing:* Real-time typing directly into Messenger, WhatsApp, Chrome, Facebook, etc. without needing to tap paste!
-              - *Your Custom Avatar Icon:* Installed with your custom portrait icon with watery blue glow.
-
-            ### 💻 Desktop (Windows):
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.7/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Security Hardened:* External window-opening protection and navigation lock enabled.
-              - *Draggable Anywhere:* Click & drag the watery bubble anywhere across monitors.
-              - *Direct Keystroke Injection:* Auto-pastes at cursor in 40ms in any application (Word, Notepad, Chrome, WhatsApp).
+            - **[KothaFlow-VoiceTyping-v1.0.8.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.8/KothaFlow-VoiceTyping-v1.0.8.apk)**
+              - *Features:* Custom avatar icon, watery translucent bubble, free dragging anywhere on screen, and direct auto-typing into Messenger, WhatsApp, Chrome!
           files: release-files/**
           draft: false
           prerelease: false
