@@ -415,11 +415,6 @@
         setTimeout(resetToIdle, 1500);
       }
     }
-        console.error('Transcription error:', err);
-        transcriptText.innerText = 'সার্ভার কানেকশন ত্রুটি';
-        setTimeout(resetToIdle, 1500);
-      }
-    }
 
     // Modal for setting API key
     ipcRenderer.on('open-api-modal', async () => {

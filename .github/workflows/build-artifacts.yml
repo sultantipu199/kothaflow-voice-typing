@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.8.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.8.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.8.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.8.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.9.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.9.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.9.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.9.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.8.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.9.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -117,32 +117,29 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.8
+          tag_name: v1.1.9
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.1.8 — 100% Rock-Solid Audio Capture, Universal Mic Support & Instant Auto-Typing
+          name: KothaFlow v1.1.9 — 100% Fixed Event Listeners, F8 Shortcut & Full Responsiveness
           body: |
-            ## 🎙️ KothaFlow Studio v1.1.8 — Complete Zero-Crash Audio & Instant Voice Typing
+            ## 🎙️ KothaFlow Studio v1.1.9 — 100% Responsive, Fixed Click & F8 Hotkey
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.1.8.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.8/KothaFlow-Desktop-Setup-v1.1.8.exe)**
-              - *1-Click Windows Installer:* Installs KothaFlow and **automatically creates a Desktop Shortcut**!
-              - *Universal Microphone Support:* Universal audio capture compatible with all laptop/desktop microphone drivers.
-              - *Pre-loaded Non-Expiring Key:* Built-in Groq key initialization, never runs empty.
-              - *Native Win32 Paste Engine:* Directly types into Notepad, Word, Chrome, WhatsApp with zero focus loss!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.8/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.1.9.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.9/KothaFlow-Desktop-Setup-v1.1.9.exe)**
+              - *1-Click Windows Installer:* Installs KothaFlow and **creates a Desktop Shortcut**!
+              - *100% Responsive:* Resolved script syntax issue so mouse clicks, right-click context menu, and F8 shortcut work immediately and flawlessly!
+              - *Native Win32 Paste Engine:* Instantly types speech directly into active text field in Notepad, Word, Chrome, WhatsApp!
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.9/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.8/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.9/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.1.8.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.8/KothaFlow-VoiceTyping-v1.1.8.apk)**
+            - **[KothaFlow-VoiceTyping-v1.1.9.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.9/KothaFlow-VoiceTyping-v1.1.9.apk)**
               - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
 
-            ### 🚀 Fixed & Perfected in v1.1.8:
-            - **ইউনিভার্সাল মাইক্রোফোন অডিও ড্রাইভার ফিক্স:** ওভারকনস্ট্রেইন্ড এরর দূর করে সব ল্যাপটপ মাইক্রোফোনে ১০০% সক্রিয় করা হয়েছে।
-            - **ইন-মেমোরি অটো-কি লোডার:** কী কখনো খালি থাকবে না, সার্বক্ষণিক সক্রিয় থাকবে।
-            - **টাইপিং অ্যান্ড ফোকাস রিট্রিভাল:** কথা বলা শেষ হওয়ামাত্রই বাবল ফোকাস ফিরিয়ে দিয়ে সরাসরি কার্সরে টাইপ করে দেবে।
-            - **কিবোর্ড শর্টকাট:** যেকোনো উইন্ডোতে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
+            ### 🚀 Fixed in v1.1.9:
+            - **স্ক্রিপ্ট সিনট্যাক্স ফিক্স:** রেন্ডারার স্ক্রিপ্টের অতিরিক্ত ব্লক অপসারণ করা হয়েছে, যার ফলে মাউস ক্লিক, রাইট ক্লিক ও F8 হটকি তাৎক্ষণিকভাবে রেসপন্ড করবে।
+            - **সার্বক্ষণিক সক্রিয় শর্টকাট:** F8 ও Ctrl+Shift+Space চাপামাত্রই রেকর্ডিং চালু হবে এবং পুনরায় চাপলে স্বয়ংক্রিয়ভাবে টাইপ হবে।
           files: release-files/**
           draft: false
           prerelease: false
