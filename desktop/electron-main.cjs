@@ -1,56 +1,100 @@
-const { app, BrowserWindow, globalShortcut, clipboard } = require('electron');
+const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu } = require('electron');
 const path = require('path');
+const { exec } = require('child_process');
 
-let overlayWindow = null;
+let bubbleWindow = null;
 let isRecording = false;
 
-function createOverlayWindow() {
-  overlayWindow = new BrowserWindow({
-    width: 380,
-    height: 72,
+function createBubbleWindow() {
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  bubbleWindow = new BrowserWindow({
+    width: 64,
+    height: 64,
+    x: width - 90,
+    y: height - 120,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    skipTaskbar: true,
+    skipTaskbar: false,
     resizable: false,
-    show: false,
+    hasShadow: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
     }
   });
 
-  overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  bubbleWindow.loadFile(path.join(__dirname, 'overlay.html'));
+  bubbleWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+}
+
+function pasteAtCursor(text) {
+  if (!text || text.trim() === '') return;
+  clipboard.writeText(text.trim() + ' ');
+
+  // Small delay to let target application gain active focus, then simulate Ctrl+V
+  setTimeout(() => {
+    if (process.platform === 'win32') {
+      exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -Milliseconds 60; $w.SendKeys('^v')"`);
+    } else if (process.platform === 'darwin') {
+      exec(`osascript -e 'delay 0.06' -e 'tell application "System Events" to keystroke "v" using command down'`);
+    } else {
+      exec(`sleep 0.06 && xdotool key ctrl+v`);
+    }
+  }, 100);
 }
 
 app.whenReady().then(() => {
-  createOverlayWindow();
+  createBubbleWindow();
 
-  // Global hotkey: Ctrl+Shift+Space (Mac: Command+Shift+Space)
-  const hotkey = process.platform === 'darwin' ? 'Command+Shift+Space' : 'Ctrl+Shift+Space';
+  // Resize window when switching between compact bubble and expanded pill
+  ipcMain.on('set-bubble-mode', (event, mode) => {
+    if (!bubbleWindow) return;
+    const { screen } = require('electron');
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width } = primaryDisplay.workAreaSize;
+    const currentBounds = bubbleWindow.getBounds();
 
-  const registered = globalShortcut.register(hotkey, () => {
-    if (!isRecording) {
+    if (mode === 'expanded') {
       isRecording = true;
-      if (overlayWindow) {
-        overlayWindow.showInactive();
-      }
-      console.log('KothaFlow: Recording started... speak in Bangla or English');
+      const newWidth = 320;
+      const newHeight = 64;
+      const newX = Math.max(10, Math.min(width - newWidth - 10, currentBounds.x - 250));
+      bubbleWindow.setBounds({ x: newX, y: currentBounds.y, width: newWidth, height: newHeight });
     } else {
       isRecording = false;
-      if (overlayWindow) {
-        overlayWindow.hide();
-      }
-      console.log('KothaFlow: Dictation finished. Text automatically pasted at cursor.');
+      bubbleWindow.setBounds({ x: currentBounds.x, y: currentBounds.y, width: 64, height: 64 });
     }
   });
 
-  if (!registered) {
-    console.error('Failed to register global hotkey:', hotkey);
-  } else {
-    console.log(`KothaFlow Desktop active! Press ${hotkey} in any software (Word, Notepad, Chrome) to dictate.`);
-  }
+  // Handle transcribed text commit from UI
+  ipcMain.on('commit-speech', (event, text) => {
+    pasteAtCursor(text);
+  });
+
+  // Global hotkey: Ctrl+Shift+Space (Mac: Command+Shift+Space)
+  const hotkey = process.platform === 'darwin' ? 'Command+Shift+Space' : 'Ctrl+Shift+Space';
+  globalShortcut.register(hotkey, () => {
+    if (bubbleWindow) {
+      bubbleWindow.webContents.send('toggle-recording-hotkey');
+    }
+  });
+
+  // Context menu on bubble
+  ipcMain.on('show-context-menu', (event) => {
+    const contextMenu = Menu.buildFromTemplate([
+      { label: '🇧🇩 বাংলা ভাষা', click: () => bubbleWindow.webContents.send('switch-lang', 'bn-BD') },
+      { label: '🇺🇸 English', click: () => bubbleWindow.webContents.send('switch-lang', 'en-US') },
+      { type: 'separator' },
+      { label: 'KothaFlow বন্ধ করুন (Exit)', click: () => app.quit() }
+    ]);
+    contextMenu.popup(BrowserWindow.fromWebContents(event.sender));
+  });
+
+  console.log(`KothaFlow Desktop Bubble is active! Draggable anywhere. Hotkey: ${hotkey}`);
 });
 
 app.on('will-quit', () => {

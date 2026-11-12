@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/floatingRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <!-- 1. Circular Idle Bubble (Wispr Flow Style) -->
+    <RelativeLayout
+        android:id="@+id/bubbleIdleView"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
+        android:background="@drawable/bg_floating_bubble"
+        android:elevation="12dp">
+
+        <ImageView
+            android:id="@+id/imgBubbleMic"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerInParent="true"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:contentDescription="Voice Dictation Bubble" />
+
+        <TextView
+            android:id="@+id/tvBubbleLangBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:background="#2563EB"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:text="বা"
+            android:textColor="#FFFFFF"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- 2. Active Recording Pill (Expands horizontally when recording) -->
+    <LinearLayout
+        android:id="@+id/bubblePillView"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_recording_pill"
+        android:elevation="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <!-- Red Pulsing Record Indicator -->
+        <TextView
+            android:id="@+id/tvPillIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="4dp"
+            android:paddingEnd="6dp"
+            android:text="🔴"
+            android:textSize="14sp" />
+
+        <!-- Spoken text / prompt -->
+        <TextView
+            android:id="@+id/tvPillText"
+            android:layout_width="wrap_content"
+            android:maxWidth="200dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="কথা বলুন..."
+            android:textColor="#F8FAFC"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- Stop / Done Button -->
+        <ImageButton
+            android:id="@+id/btnPillDone"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_btn_stop"
+            android:src="@android:drawable/ic_menu_send"
+            android:contentDescription="Insert Text" />
+
+        <!-- Cancel / Close Button -->
+        <ImageButton
+            android:id="@+id/btnPillClose"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Cancel Recording" />
+    </LinearLayout>
+
+</FrameLayout>

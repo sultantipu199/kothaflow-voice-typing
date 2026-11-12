@@ -31,8 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.1.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.1.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.1.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.2.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.2.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.2.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.2.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -87,19 +88,19 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1
+          tag_name: v1.0.2
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.0.1 — Android APK & Desktop Release
+          name: KothaFlow v1.0.2 — Floating Voice Bubble (Wispr Flow) & Desktop Release
           body: |
-            ## 🎙️ KothaFlow Studio v1.0.1 — Direct Download Links
+            ## 🎙️ KothaFlow Studio v1.0.2 — Direct Download Links
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.0.1.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.1/KothaFlow-VoiceTyping-v1.0.1.apk)**
-              - *Installation:* Download APK to your phone, tap to install, open the KothaFlow app from your app drawer, and follow the 2-step setup wizard!
-              - *Usage in Messenger/WhatsApp:* Tap any chat text box, switch to KothaFlow keyboard, and tap the big mic button to speak.
+            - **[KothaFlow-VoiceTyping-v1.0.2.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.2/KothaFlow-VoiceTyping-v1.0.2.apk)**
+              - *Installation:* Download APK to your phone, tap to install, and open KothaFlow Studio.
+              - *Wispr Flow Style Bubble:* Tap "ভাসমান বাবল চালু করুন" and "অ্যাক্সেসিবিলিটি অনুমতি দিন". You can keep using **Google Keyboard (Gboard)** as default while the floating bubble sits on your screen, ready to voice-type with 1 tap into Messenger, WhatsApp, Chrome, or any app!
 
             ### 💻 Desktop (Windows):
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.1/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.2/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Installation:* Extract ZIP on your PC, double-click `run-windows.bat`. Press `Ctrl+Shift+Space` in any app to dictate!
           files: release-files/**
           draft: false

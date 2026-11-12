@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">KothaFlow</string>
+    <string name="accessibility_service_desc">KothaFlow ব্যবহার করে যে কোনো অ্যাপে (যেমন Messenger, WhatsApp) আপনার বর্তমান কিবোর্ড (যেমন Gboard) না বদলে ভাসমান বাবল থেকে সরাসরি স্বয়ংক্রিয়ভাবে কথা টাইপ করার অনুমতি দেয়।</string>
 </resources>

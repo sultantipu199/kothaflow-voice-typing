@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognitionListener
@@ -18,51 +20,77 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var btnEnableKeyboard: Button
-    private lateinit var btnSelectKeyboard: Button
-    private lateinit var tvStatus: TextView
+    private lateinit var tvBubbleStatusBadge: TextView
+    private lateinit var btnToggleBubble: Button
+    private lateinit var tvAccessStatusBadge: TextView
+    private lateinit var btnEnableAccessibility: Button
     private lateinit var etTestInput: EditText
     private lateinit var btnTestMic: ImageButton
     private lateinit var tvMicStatus: TextView
+    private lateinit var btnEnableKeyboard: Button
+    private lateinit var btnSelectKeyboard: Button
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
+
+    companion object {
+        private const val REQ_OVERLAY_PERMISSION = 1001
+        private const val REQ_AUDIO_PERMISSION = 1002
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btnEnableKeyboard = findViewById(R.id.btnEnableKeyboard)
-        btnSelectKeyboard = findViewById(R.id.btnSelectKeyboard)
-        tvStatus = findViewById(R.id.tvStatus)
+        tvBubbleStatusBadge = findViewById(R.id.tvBubbleStatusBadge)
+        btnToggleBubble = findViewById(R.id.btnToggleBubble)
+        tvAccessStatusBadge = findViewById(R.id.tvAccessStatusBadge)
+        btnEnableAccessibility = findViewById(R.id.btnEnableAccessibility)
         etTestInput = findViewById(R.id.etTestInput)
         btnTestMic = findViewById(R.id.btnTestMic)
         tvMicStatus = findViewById(R.id.tvMicStatus)
+        btnEnableKeyboard = findViewById(R.id.btnEnableKeyboard)
+        btnSelectKeyboard = findViewById(R.id.btnSelectKeyboard)
 
-        // Setup step 1: Open system keyboard settings
-        btnEnableKeyboard.setOnClickListener {
+        // 1. Floating Bubble Toggle
+        btnToggleBubble.setOnClickListener {
+            handleBubbleToggle()
+        }
+
+        // 2. Accessibility Service Button
+        btnEnableAccessibility.setOnClickListener {
             try {
-                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
                 startActivity(intent)
+                Toast.makeText(this, "তালিকা থেকে 'KothaFlow Auto-Type' চালু করুন", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(this, "সেটিংস খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "অ্যাক্সেসিবিলিটি সেটিংস খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Setup step 2: Show keyboard picker dialog
+        // 3. Test Mic Button
+        btnTestMic.setOnClickListener {
+            checkMicPermissionAndRecord()
+        }
+
+        // 4. Optional Keyboard Setup
+        btnEnableKeyboard.setOnClickListener {
+            try {
+                val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+            } catch (_: Exception) {}
+        }
+
         btnSelectKeyboard.setOnClickListener {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showInputMethodPicker()
-        }
-
-        // Setup mic button for testing
-        btnTestMic.setOnClickListener {
-            checkMicPermissionAndRecord()
         }
 
         requestAudioPermissionIfNeeded()
@@ -70,27 +98,78 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        updateKeyboardStatus()
+        updateUIStatus()
     }
 
-    private fun isKeyboardEnabled(): Boolean {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        val enabledMethods = imm.enabledInputMethodList
-        val myPackageName = packageName
-        return enabledMethods.any { it.packageName == myPackageName }
-    }
-
-    private fun updateKeyboardStatus() {
-        val isEnabled = isKeyboardEnabled()
-        if (isEnabled) {
-            tvStatus.text = "✅ KothaFlow কিবোর্ড সিস্টেমে সচল (Enabled) আছে!"
-            tvStatus.setTextColor(0xFF10B981.toInt()) // green
-            btnEnableKeyboard.text = "✓ কীবোর্ড সক্রিয় করা আছে"
-            btnEnableKeyboard.isEnabled = true
+    private fun updateUIStatus() {
+        // Floating Bubble Status
+        if (FloatingBubbleService.isRunning) {
+            tvBubbleStatusBadge.text = "🟢 সক্রিয়"
+            tvBubbleStatusBadge.setTextColor(0xFF10B981.toInt())
+            btnToggleBubble.text = "🛑 ভাসমান বাবল বন্ধ করুন"
+            btnToggleBubble.setBackgroundResource(R.drawable.bg_btn_secondary)
         } else {
-            tvStatus.text = "⚠️ KothaFlow এখনো বন্ধ আছে। উপরের ১ নং বাটনে চাপ দিয়ে চালু করুন।"
-            tvStatus.setTextColor(0xFFF59E0B.toInt()) // amber
-            btnEnableKeyboard.text = "১. কীবোর্ড সেটিংস এ KothaFlow অন করুন"
+            tvBubbleStatusBadge.text = "⚪ বন্ধ আছে"
+            tvBubbleStatusBadge.setTextColor(0xFF94A3B8.toInt())
+            btnToggleBubble.text = "✨ ভাসমান বাবল চালু করুন"
+            btnToggleBubble.setBackgroundResource(R.drawable.bg_btn_primary)
+        }
+
+        // Accessibility Status
+        if (KothaFlowAccessibilityService.isRunning()) {
+            tvAccessStatusBadge.text = "🟢 সক্রিয় আছে"
+            tvAccessStatusBadge.setTextColor(0xFF10B981.toInt())
+            btnEnableAccessibility.text = "✓ স্বয়ংক্রিয় টাইপিং চালু আছে"
+        } else {
+            tvAccessStatusBadge.text = "⚠️ বন্ধ আছে"
+            tvAccessStatusBadge.setTextColor(0xFFF59E0B.toInt())
+            btnEnableAccessibility.text = "অ্যাক্সেসিবিলিটি অনুমতি দিন (অন করুন)"
+        }
+    }
+
+    private fun handleBubbleToggle() {
+        if (!hasOverlayPermission()) {
+            requestOverlayPermission()
+            return
+        }
+
+        if (FloatingBubbleService.isRunning) {
+            val stopIntent = Intent(this, FloatingBubbleService::class.java).apply {
+                action = FloatingBubbleService.ACTION_STOP
+            }
+            startService(stopIntent)
+            Toast.makeText(this, "ভাসমান বাবল বন্ধ করা হয়েছে", Toast.LENGTH_SHORT).show()
+        } else {
+            val startIntent = Intent(this, FloatingBubbleService::class.java).apply {
+                action = FloatingBubbleService.ACTION_START
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(startIntent)
+            } else {
+                startService(startIntent)
+            }
+            Toast.makeText(this, "✨ ভাসমান বাবল সক্রিয় করা হয়েছে!", Toast.LENGTH_SHORT).show()
+        }
+
+        etTestInput.postDelayed({ updateUIStatus() }, 400)
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true
+        }
+    }
+
+    private fun requestOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Toast.makeText(this, "অন্যান্য অ্যাপের উপরে বাবল দেখানোর অনুমতি দিন", Toast.LENGTH_LONG).show()
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivityForResult(intent, REQ_OVERLAY_PERMISSION)
         }
     }
 
@@ -100,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.RECORD_AUDIO),
-                101
+                REQ_AUDIO_PERMISSION
             )
         }
     }
@@ -108,7 +187,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkMicPermissionAndRecord() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 101)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQ_AUDIO_PERMISSION)
             return
         }
 
@@ -165,7 +244,6 @@ class MainActivity : AppCompatActivity() {
                 val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 if (!matches.isNullOrEmpty()) {
                     var spokenText = matches[0].trim()
-                    // Clean filler words
                     spokenText = cleanSpokenText(spokenText)
                     val existing = etTestInput.text.toString()
                     val newText = if (existing.isEmpty()) spokenText else "$existing $spokenText"

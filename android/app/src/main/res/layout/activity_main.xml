@@ -21,30 +21,30 @@
             android:paddingBottom="20dp">
 
             <ImageView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
                 android:src="@mipmap/ic_launcher"
-                android:contentDescription="KothaFlow App Icon" />
+                android:contentDescription="KothaFlow Logo" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:text="KothaFlow Studio"
                 android:textColor="#F8FAFC"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="বাংলা ও ইংরেজি এআই ভয়েস টাইপিং কিবোর্ড"
+                android:text="Wispr Flow স্টাইল ভাসমান ভয়েস টাইপিং ও স্মার্ট কিবোর্ড"
                 android:textColor="#94A3B8"
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- Activation Steps Card -->
+        <!-- CARD 1: Floating Bubble Hero Feature -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,52 +53,118 @@
             android:padding="18dp"
             android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="কিবোর্ড সেটআপ ও চালু করুন:"
-                android:textColor="#38BDF8"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
 
-            <!-- Step 1 Button -->
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🔮 ভাসমান ভয়েস বাবল (Wispr Flow)"
+                    android:textColor="#38BDF8"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBubbleStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_btn_secondary"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="অফলাইন"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="আপনার ফোনের ডিফল্ট Google কিবোর্ড (Gboard) চালু রেখেই স্ক্রিনের পাশে থাকা ছোট বাবলে ১-ট্যাপ করে ভয়েস টাইপ করুন!"
+                android:textColor="#94A3B8"
+                android:textSize="13sp"
+                android:lineSpacingExtra="2dp"
+                android:layout_marginBottom="14dp" />
+
             <Button
-                android:id="@+id/btnEnableKeyboard"
+                android:id="@+id/btnToggleBubble"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:background="@drawable/bg_btn_primary"
-                android:text="১. কীবোর্ড সেটিংস এ KothaFlow অন করুন"
+                android:text="✨ ভাসমান বাবল চালু করুন"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                android:textAllCaps="false"
-                android:layout_marginBottom="10dp" />
+                android:textAllCaps="false" />
+        </LinearLayout>
 
-            <!-- Step 2 Button -->
-            <Button
-                android:id="@+id/btnSelectKeyboard"
+        <!-- CARD 2: Accessibility Auto-Type Permission -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="⚡ স্বয়ংক্রিয় টাইপিং সার্ভিস (Auto-Type)"
+                    android:textColor="#10B981"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvAccessStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_btn_secondary"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="চেক করা হচ্ছে"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Messenger, WhatsApp বা যেকোনো চ্যাটে কথা বললে যাতে নিজে নিজে মেসেজ বক্সে লেখা বসে যায়, তার জন্য এটি প্রয়োজন।"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnEnableAccessibility"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
                 android:background="@drawable/bg_btn_secondary"
-                android:text="২. KothaFlow কিবোর্ড সিলেক্ট করুন"
+                android:text="অ্যাক্সেসিবিলিটি অনুমতি দিন (অন করুন)"
                 android:textColor="#F8FAFC"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textAllCaps="false"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="● কিবোর্ড স্ট্যাটাস চেক করা হচ্ছে..."
-                android:textColor="#10B981"
-                android:textSize="13sp"
-                android:paddingTop="4dp" />
+                android:textAllCaps="false" />
         </LinearLayout>
 
-        <!-- Interactive Voice Test Lab Card -->
+        <!-- CARD 3: Voice Test Lab -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -110,7 +176,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ভয়েস টাইপিং টেস্ট বক্স:"
+                android:text="🎙️ ভয়েস টাইপিং টেস্ট বক্স:"
                 android:textColor="#F8FAFC"
                 android:textSize="15sp"
                 android:textStyle="bold"
@@ -122,7 +188,7 @@
                 android:layout_height="100dp"
                 android:background="@drawable/bg_btn_secondary"
                 android:gravity="top|start"
-                android:hint="এখানে ক্লিক করে কিবোর্ড চেক করুন অথবা নিচের মাইকে কথা বলুন..."
+                android:hint="এখানে ক্লিক করে ভাসমান বাবল পরীক্ষা করুন অথবা নিচের মাইকে কথা বলুন..."
                 android:padding="12dp"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
@@ -133,15 +199,15 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="14dp">
 
                 <ImageButton
                     android:id="@+id/btnTestMic"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:background="@drawable/bg_btn_mic"
                     android:src="@android:drawable/ic_btn_speak_now"
-                    android:contentDescription="ভয়েস রেকর্ড করুন" />
+                    android:contentDescription="ভয়েস টেস্ট" />
 
                 <TextView
                     android:id="@+id/tvMicStatus"
@@ -154,7 +220,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Messenger & WhatsApp Usage Instructions -->
+        <!-- CARD 4: Optional Virtual Keyboard Setup -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -165,19 +231,40 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="যেকোনো অ্যাপে (Messenger, WhatsApp) ব্যবহারের নিয়ম:"
+                android:text="⌨️ ফুল-স্ক্রিন কিবোর্ড মোড (ঐচ্ছিক):"
                 android:textColor="#F8FAFC"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="10dp" />
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="4dp"
-                android:text="১. মেসেঞ্জারে বা হোয়াটসঅ্যাপে যেকোনো লেখার বক্সে ক্লিক করুন।\n২. কীবোর্ডের নিচের ডানপাশের ছোট কিবোর্ড আইকনে চেপে 'KothaFlow' সিলেক্ট করুন।\n৩. KothaFlow কিবোর্ডের বড় মাইক বাটনে ট্যাপ করে কথা বলুন।\n৪. 'um', 'আআ' জাতীয় কথা বাদ দিয়ে স্বয়ংক্রিয়ভাবে নির্ভুল দাঁড়ি ও কমা সহ মেসেজ টাইপ হয়ে যাবে!"
+                android:text="আপনি যদি ভাসমান বাবলের বদলে সরাসরি অন-স্ক্রিন কিবোর্ড হিসেবে KothaFlow ব্যবহার করতে চান:"
                 android:textColor="#94A3B8"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnEnableKeyboard"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_btn_secondary"
+                android:text="কীবোর্ড সেটিংস খুলুন"
+                android:textColor="#CBD5E1"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnSelectKeyboard"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_btn_secondary"
+                android:text="ডিফল্ট কিবোর্ড নির্বাচন করুন"
+                android:textColor="#CBD5E1"
+                android:textSize="13sp"
+                android:textAllCaps="false" />
         </LinearLayout>
 
     </LinearLayout>

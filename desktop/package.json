@@ -1,16 +1,12 @@
 {
   "name": "kothaflow-desktop",
   "version": "1.0.0",
-  "description": "KothaFlow Desktop Voice Typing (Global Shortcut + Automatic OS Paste)",
+  "description": "KothaFlow Desktop Voice Typing (Wispr Flow Style Floating Bubble + Global Hotkey)",
   "main": "electron-main.cjs",
   "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "start": "electron ."
   },
   "dependencies": {
-    "@google/genai": "^0.1.1",
-    "electron": "^33.2.0",
-    "robotjs": "^0.6.0"
+    "electron": "^33.2.0"
   }
 }

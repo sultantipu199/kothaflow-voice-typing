@@ -2,11 +2,15 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <title>KothaFlow Floating Bar</title>
+  <title>KothaFlow Floating Voice Bubble</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none;
+    }
+    body {
       background: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: flex;
@@ -14,48 +18,302 @@
       justify-content: center;
       height: 100vh;
       overflow: hidden;
-      user-select: none;
     }
-    .pill {
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(59, 130, 246, 0.5);
-      border-radius: 9999px;
-      padding: 8px 20px;
+
+    /* 1. Compact Idle Bubble */
+    #idleBubble {
+      width: 58dp;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8, #0f172a);
+      border: 2px solid #38bdf8;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.4);
       display: flex;
       align-items: center;
-      gap: 12px;
-      color: #fff;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.3);
-      backdrop-filter: blur(12px);
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      -webkit-app-region: drag;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .dot {
+    #idleBubble:hover {
+      transform: scale(1.06);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 22px rgba(56, 189, 248, 0.6);
+    }
+    .mic-icon {
+      width: 24px;
+      height: 24px;
+      fill: #ffffff;
+      -webkit-app-region: no-drag;
+    }
+    .lang-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: #38bdf8;
+      color: #0f172a;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    /* 2. Expanded Recording Pill */
+    #recordingPill {
+      display: none;
+      width: 310px;
+      height: 54px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 2px solid #ef4444;
+      border-radius: 9999px;
+      padding: 6px 14px;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-app-region: drag;
+    }
+    .record-dot {
       width: 12px;
       height: 12px;
       background: #ef4444;
       border-radius: 50%;
       animation: pulse 1.2s infinite;
+      flex-shrink: 0;
     }
-    .status-text {
+    .wave-bars {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 18px;
+    }
+    .wave-bar {
+      width: 3px;
+      height: 6px;
+      background: #38bdf8;
+      border-radius: 2px;
+      animation: soundwave 1s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 18px; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; height: 10px; }
+
+    .transcript-box {
+      flex: 1;
       font-size: 13px;
       font-weight: 500;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-app-region: no-drag;
     }
-    .hint {
-      font-size: 11px;
+
+    .btn-action {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+      -webkit-app-region: no-drag;
+      transition: transform 0.1s;
+    }
+    .btn-action:hover {
+      transform: scale(1.1);
+    }
+    .btn-done {
+      width: 32px;
+      height: 32px;
+      background: #10b981;
+      color: white;
+    }
+    .btn-cancel {
+      width: 26px;
+      height: 26px;
+      background: #334155;
       color: #94a3b8;
-      border-left: 1px solid #334155;
-      padding-left: 10px;
     }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    @keyframes soundwave {
+      0% { height: 4px; }
+      100% { height: 18px; }
     }
   </style>
 </head>
 <body>
-  <div class="pill">
-    <div class="dot"></div>
-    <div class="status-text">KothaFlow শুনছে... কথা বলুন</div>
-    <div class="hint">Ctrl+Shift+Space চাপুন</div>
+
+  <!-- Idle Bubble -->
+  <div id="idleBubble" title="ক্লিক করে কথা বলুন (ডান-ক্লিকে মেনু)">
+    <svg class="mic-icon" viewBox="0 0 24 24">
+      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+    </svg>
+    <div id="langBadge" class="lang-badge">বা</div>
   </div>
+
+  <!-- Expanded Recording Pill -->
+  <div id="recordingPill">
+    <div class="record-dot"></div>
+    <div class="wave-bars">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <div id="transcriptText" class="transcript-box">কথা বলুন...</div>
+    <button id="btnDone" class="btn-action btn-done" title="টাইপ করুন (Paste)">✓</button>
+    <button id="btnCancel" class="btn-action btn-cancel" title="বাতিল করুন">✕</button>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const idleBubble = document.getElementById('idleBubble');
+    const recordingPill = document.getElementById('recordingPill');
+    const transcriptText = document.getElementById('transcriptText');
+    const langBadge = document.getElementById('langBadge');
+    const btnDone = document.getElementById('btnDone');
+    const btnCancel = document.getElementById('btnCancel');
+
+    let currentLang = 'bn-BD';
+    let recognition = null;
+    let isRecording = false;
+    let spokenResult = '';
+
+    // Initialize Web Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function startRecording() {
+      if (isRecording) return;
+      isRecording = true;
+      spokenResult = '';
+      transcriptText.innerText = 'শুনছি... মুখে বলুন...';
+
+      ipcRenderer.send('set-bubble-mode', 'expanded');
+      idleBubble.style.display = 'none';
+      recordingPill.style.display = 'flex';
+
+      if (!SpeechRecognition) {
+        transcriptText.innerText = 'স্পিচ ইঞ্জিন পাওয়া যায়নি';
+        return;
+      }
+
+      try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = currentLang;
+
+        recognition.onresult = (event) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              spokenResult += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          transcriptText.innerText = spokenResult || interim || 'শুনছি...';
+        };
+
+        recognition.onerror = (e) => {
+          console.error(e);
+        };
+
+        recognition.onend = () => {
+          if (isRecording) {
+            try { recognition.start(); } catch(_) {}
+          }
+        };
+
+        recognition.start();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function cleanText(text) {
+      let clean = text || '';
+      const fillers = [' um ', ' uh ', ' ah ', ' আর কি ', ' এই যে ', ' আআ '];
+      fillers.forEach(f => {
+        clean = clean.replace(new RegExp(f, 'gi'), ' ');
+      });
+      return clean.trim().replace(/\\s+/g, ' ');
+    }
+
+    function stopAndCommit() {
+      if (!isRecording) return;
+      isRecording = false;
+      if (recognition) {
+        try { recognition.stop(); } catch(_) {}
+      }
+
+      const finalCleaned = cleanText(spokenResult || transcriptText.innerText);
+      if (finalCleaned && finalCleaned !== 'শুনছি... মুখে বলুন...' && finalCleaned !== 'কথা বলুন...') {
+        ipcRenderer.send('commit-speech', finalCleaned);
+      }
+
+      resetToIdle();
+    }
+
+    function cancelRecording() {
+      isRecording = false;
+      if (recognition) {
+        try { recognition.stop(); } catch(_) {}
+      }
+      resetToIdle();
+    }
+
+    function resetToIdle() {
+      ipcRenderer.send('set-bubble-mode', 'compact');
+      recordingPill.style.display = 'none';
+      idleBubble.style.display = 'flex';
+      spokenResult = '';
+    }
+
+    // Click triggers
+    idleBubble.addEventListener('click', (e) => {
+      startRecording();
+    });
+
+    idleBubble.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      ipcRenderer.send('show-context-menu');
+    });
+
+    btnDone.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stopAndCommit();
+    });
+
+    btnCancel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cancelRecording();
+    });
+
+    // Hotkey listener from main process
+    ipcRenderer.on('toggle-recording-hotkey', () => {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopAndCommit();
+      }
+    });
+
+    // Language switch
+    ipcRenderer.on('switch-lang', (event, lang) => {
+      currentLang = lang;
+      langBadge.innerText = lang === 'bn-BD' ? 'বা' : 'EN';
+    });
+  </script>
 </body>
 </html>
