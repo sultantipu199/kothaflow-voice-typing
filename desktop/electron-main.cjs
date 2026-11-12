@@ -190,6 +190,31 @@ app.whenReady().then(() => {
     bubbleWindow.setPosition(x + dx, y + dy);
   });
 
+  // Groq API Key Storage Handlers
+  ipcMain.handle('get-groq-key', () => {
+    try {
+      const candidatePaths = [
+        path.join(app.getPath('userData'), 'groq_key.txt'),
+        path.join(__dirname, 'groq_key.txt')
+      ];
+      for (const p of candidatePaths) {
+        if (fs.existsSync(p)) {
+          const key = fs.readFileSync(p, 'utf8').trim();
+          if (key) return key;
+        }
+      }
+    } catch (e) {}
+    return '';
+  });
+
+  ipcMain.on('save-groq-key', (event, key) => {
+    try {
+      const userDir = app.getPath('userData');
+      if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+      fs.writeFileSync(path.join(userDir, 'groq_key.txt'), (key || '').trim(), 'utf8');
+    } catch (e) {}
+  });
+
   // Commit text from renderer and auto-paste directly into active write box
   ipcMain.on('commit-speech', (event, text) => {
     pasteAtCursor(text);

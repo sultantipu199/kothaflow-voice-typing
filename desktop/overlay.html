@@ -269,9 +269,22 @@
       }
     }
 
+    async function getStoredGroqKey() {
+      let key = localStorage.getItem('kothaflow_groq_key') || '';
+      if (!key) {
+        try {
+          key = await ipcRenderer.invoke('get-groq-key');
+          if (key) {
+            localStorage.setItem('kothaflow_groq_key', key);
+          }
+        } catch (e) {}
+      }
+      return key;
+    }
+
     async function transcribeAndCommit(audioBlob) {
       transcriptText.innerText = 'টাইপ করা হচ্ছে...';
-      let apiKey = localStorage.getItem('kothaflow_groq_key') || '';
+      let apiKey = await getStoredGroqKey();
 
       if (!apiKey) {
         const inputKey = prompt(
@@ -281,6 +294,7 @@
         if (inputKey && inputKey.trim()) {
           apiKey = inputKey.trim();
           localStorage.setItem('kothaflow_groq_key', apiKey);
+          ipcRenderer.send('save-groq-key', apiKey);
         } else {
           resetToIdle();
           return;
@@ -317,11 +331,12 @@
     }
 
     // Modal for setting API key
-    ipcRenderer.on('open-api-modal', () => {
-      const current = localStorage.getItem('kothaflow_groq_key') || '';
-      const newKey = prompt('🔑 Groq API Key লিখুন বা পেস্ট করুন (console.groq.com):', current);
-      if (newKey !== null) {
+    ipcRenderer.on('open-api-modal', async () => {
+      const current = await getStoredGroqKey();
+      const newKey = prompt('🔑 Groq API Key লিখুন বা পরিবর্তন করুন (console.groq.com):', current);
+      if (newKey !== null && newKey.trim()) {
         localStorage.setItem('kothaflow_groq_key', newKey.trim());
+        ipcRenderer.send('save-groq-key', newKey.trim());
         alert('✓ Groq API Key সফলভাবে সেভ করা হয়েছে!');
       }
     });

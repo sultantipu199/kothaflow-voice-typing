@@ -12,3 +12,8 @@ coverage/
 .vscode/
 .playwright-cli/
 .tempmediaStorage/
+groq_key.txt
+*.key
+desktop/groq_key.txt
+user-config.json
+
