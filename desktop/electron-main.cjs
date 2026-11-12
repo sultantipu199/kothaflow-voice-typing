@@ -51,12 +51,28 @@ function createBubbleWindow() {
   bubbleWindow.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
+let tempVbsPath = null;
+function getTempVbs() {
+  if (tempVbsPath && fs.existsSync(tempVbsPath)) return tempVbsPath;
+  try {
+    tempVbsPath = path.join(app.getPath('temp'), 'kothaflow_paste.vbs');
+    const vbs = 'Set sh = CreateObject("WScript.Shell")\r\nWScript.Sleep 40\r\nsh.SendKeys "^v"\r\n';
+    fs.writeFileSync(tempVbsPath, vbs, 'utf8');
+    return tempVbsPath;
+  } catch (e) {
+    return null;
+  }
+}
+
 function pasteAtCursor(rawText) {
   if (!rawText || rawText.trim() === '') return;
 
   // Auto-Healing & Adaptive Vocabulary Enhancement
-  const cleaned = autoHealer.adaptAndEnhanceText(rawText);
-  if (!cleaned || cleaned.trim() === '') return;
+  let cleaned = '';
+  try {
+    cleaned = autoHealer.adaptAndEnhanceText(rawText);
+  } catch (_) {}
+  if (!cleaned || cleaned.trim() === '') cleaned = rawText;
 
   const toPaste = cleaned.trim() + ' ';
   clipboard.writeText(toPaste);
@@ -64,18 +80,22 @@ function pasteAtCursor(rawText) {
   // Directly paste into active cursor in Word, Notepad, Chrome, WhatsApp
   setTimeout(() => {
     if (process.platform === 'win32') {
-      const vbsPath = path.join(__dirname, 'paste.vbs');
-      exec(`wscript //nologo "${vbsPath}"`, (err) => {
-        if (err) {
-          exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; $w.SendKeys('^v')"`);
-        }
-      });
+      const vbs = getTempVbs();
+      if (vbs) {
+        exec(`wscript //nologo "${vbs}"`, (err) => {
+          if (err) {
+            exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -m 40; $w.SendKeys('^v')"`);
+          }
+        });
+      } else {
+        exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -m 40; $w.SendKeys('^v')"`);
+      }
     } else if (process.platform === 'darwin') {
       exec(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
     } else {
       exec(`xdotool key ctrl+v`);
     }
-  }, 30);
+  }, 40);
 }
 
 app.whenReady().then(() => {
@@ -195,7 +215,8 @@ app.whenReady().then(() => {
     try {
       const candidatePaths = [
         path.join(app.getPath('userData'), 'groq_key.txt'),
-        path.join(__dirname, 'groq_key.txt')
+        path.join(__dirname, 'groq_key.txt'),
+        path.join(process.resourcesPath || '', 'groq_key.txt')
       ];
       for (const p of candidatePaths) {
         if (fs.existsSync(p)) {

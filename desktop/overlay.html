@@ -274,10 +274,10 @@
       if (!key) {
         try {
           key = await ipcRenderer.invoke('get-groq-key');
-          if (key) {
-            localStorage.setItem('kothaflow_groq_key', key);
-          }
         } catch (e) {}
+      }
+      if (key) {
+        localStorage.setItem('kothaflow_groq_key', key);
       }
       return key;
     }
@@ -287,18 +287,9 @@
       let apiKey = await getStoredGroqKey();
 
       if (!apiKey) {
-        const inputKey = prompt(
-          '🔑 KothaFlow ভয়েস টাইপিংয়ের জন্য আপনার ফ্রি Groq API Key দিন:\n' +
-          '(console.groq.com থেকে সম্পূর্ণ ফ্রিতে ১ ক্লিকে পাবেন)'
-        );
-        if (inputKey && inputKey.trim()) {
-          apiKey = inputKey.trim();
-          localStorage.setItem('kothaflow_groq_key', apiKey);
-          ipcRenderer.send('save-groq-key', apiKey);
-        } else {
-          resetToIdle();
-          return;
-        }
+        transcriptText.innerText = 'Groq API Key পাওয়া যায়নি';
+        setTimeout(resetToIdle, 1500);
+        return;
       }
 
       try {
@@ -317,16 +308,22 @@
         });
 
         const data = await response.json();
-        if (data && data.text) {
-          transcriptText.innerText = data.text;
-          ipcRenderer.send('commit-speech', data.text);
+        if (data && data.text && data.text.trim()) {
+          const finalSpoken = data.text.trim();
+          transcriptText.innerText = finalSpoken;
+          ipcRenderer.send('commit-speech', finalSpoken);
+          setTimeout(resetToIdle, 700);
         } else if (data && data.error) {
-          alert('Groq API Error: ' + (data.error.message || 'Key invalid'));
+          transcriptText.innerText = 'ত্রুটি: ' + (data.error.message || 'API error');
+          setTimeout(resetToIdle, 2000);
+        } else {
+          transcriptText.innerText = 'কোনো কথা শনাক্ত হয়নি';
+          setTimeout(resetToIdle, 1000);
         }
       } catch (err) {
         console.error('Transcription error:', err);
-      } finally {
-        setTimeout(resetToIdle, 300);
+        transcriptText.innerText = 'সার্ভার কানেকশন ত্রুটি';
+        setTimeout(resetToIdle, 1500);
       }
     }
 
