@@ -216,13 +216,24 @@
     let audioChunks = [];
     let audioStream = null;
 
+    const AUDIO_CONSTRAINTS = {
+      audio: {
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    };
+
     // Pre-warm microphone immediately on launch
     window.addEventListener('DOMContentLoaded', async () => {
       try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log('[KothaFlow] Mic pre-warmed successfully');
+        audioStream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+        console.log('[KothaFlow] Mic pre-warmed successfully with noise cancellation');
       } catch (e) {
-        console.warn('Mic pre-warm note:', e.message);
+        try {
+          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (_) {}
       }
     });
 
@@ -252,7 +263,11 @@
 
       try {
         if (!audioStream || !audioStream.active || audioStream.getAudioTracks().every(t => t.readyState === 'ended')) {
-          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          try {
+            audioStream = await navigator.mediaDevices.getUserMedia(AUDIO_CONSTRAINTS);
+          } catch (_) {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          }
         }
 
         if (shouldStopAfterInit) {
@@ -338,6 +353,8 @@
       return key;
     }
 
+    const BENGALI_WHISPER_PROMPT = 'আমি প্রমিত ও কথ্য বাংলা ভাষায় পরিষ্কারভাবে কথা বলছি। সঠিক বাংলা বানান, যুক্তবর্ণ ও যতিচিহ্নসহ (দাঁড়ি ।, কমা ,, প্রশ্নবোধক ?) নির্ভুলভাবে লিখুন। বাংলাদেশ, ঢাকা, প্রযুক্তি, মানুষ, জীবন, কথা, কাজ, ব্যবসা, পরিবার, ঠিক আছে, ধন্যবাদ।';
+
     async function transcribeAndCommit(audioBlob) {
       transcriptText.innerText = 'টাইপ করা হচ্ছে...';
       let apiKey = await getStoredGroqKey();
@@ -353,14 +370,15 @@
         // Standard audio file object with clean audio/webm mime type
         const audioFile = new File([audioBlob], 'speech.webm', { type: 'audio/webm' });
 
-        // Attempt 1: Whisper-Large-v3-Turbo with prompt guidance
+        // Primary: Whisper-Large-v3 (Full 32-layer state-of-the-art multilingual model)
         try {
           const form1 = new FormData();
           form1.append('file', audioFile);
-          form1.append('model', 'whisper-large-v3-turbo');
+          form1.append('model', 'whisper-large-v3');
           form1.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
+          form1.append('temperature', '0');
           if (currentLang === 'bn-BD') {
-            form1.append('prompt', 'বাংলায় স্পষ্ট এবং শুদ্ধ বানান: কথা, ভাষা, বাক্য, যতিচিহ্ন।');
+            form1.append('prompt', BENGALI_WHISPER_PROMPT);
           }
           form1.append('response_format', 'json');
 
@@ -374,21 +392,22 @@
             finalSpoken = d1.text.trim();
           } else if (d1 && d1.error && d1.error.message) {
             lastErrorMsg = d1.error.message;
-            console.warn('Attempt 1 whisper-turbo API error:', d1.error);
+            console.warn('Attempt 1 whisper-large-v3 API error:', d1.error);
           }
         } catch (e1) {
-          console.warn('Attempt 1 whisper-turbo network error:', e1);
+          console.warn('Attempt 1 whisper-large-v3 network error:', e1);
         }
 
-        // Attempt 2: Whisper-Large-v3 fallback
+        // Fallback: Whisper-Large-v3-Turbo
         if (!finalSpoken) {
           try {
             const form2 = new FormData();
             form2.append('file', audioFile);
-            form2.append('model', 'whisper-large-v3');
+            form2.append('model', 'whisper-large-v3-turbo');
             form2.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
+            form2.append('temperature', '0');
             if (currentLang === 'bn-BD') {
-              form2.append('prompt', 'বাংলায় স্পষ্ট এবং শুদ্ধ বানান: কথা, ভাষা, বাক্য, যতিচিহ্ন।');
+              form2.append('prompt', BENGALI_WHISPER_PROMPT);
             }
             form2.append('response_format', 'json');
 
@@ -402,15 +421,15 @@
               finalSpoken = d2.text.trim();
             } else if (d2 && d2.error && d2.error.message) {
               lastErrorMsg = d2.error.message;
-              console.warn('Attempt 2 whisper-large-v3 API error:', d2.error);
+              console.warn('Attempt 2 whisper-turbo API error:', d2.error);
             }
           } catch (e2) {
-            console.warn('Attempt 2 whisper-large-v3 network error:', e2);
+            console.warn('Attempt 2 whisper-turbo network error:', e2);
           }
         }
 
         if (finalSpoken) {
-          // 🧠 AI Brain Enhancement: Polish Bengali grammar & punctuation (with 2s safe timeout)
+          // 🧠 AI Brain Enhancement: Polish Bengali grammar, spelling & punctuation
           if (currentLang === 'bn-BD') {
             try {
               transcriptText.innerText = 'AI ব্রেইন সাজাচ্ছে...';
@@ -425,16 +444,16 @@
                   messages: [
                     {
                       role: 'system',
-                      content: 'You are an expert Bengali editor. Take the raw speech-to-text input in Bengali and output ONLY the clean, grammatically correct Bengali text with appropriate punctuation (।, ?, !). Do not add explanations, quotes or notes.'
+                      content: 'You are the ultimate Bengali language specialist and proofreader. Correct any phonetic ASR errors and broken conjuncts (যুক্তবর্ণ), and insert natural punctuation (।, ?, !). Never change the intended meaning, never summarize, and never omit words. Output ONLY the resulting Bengali text directly with zero explanations.'
                     },
                     { role: 'user', content: finalSpoken }
                   ],
                   temperature: 0.1,
-                  max_tokens: 350
+                  max_tokens: 450
                 })
               }).then(r => r.json());
 
-              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
+              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200));
               const brainData = await Promise.race([brainFetch, timeoutPromise]);
 
               if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
