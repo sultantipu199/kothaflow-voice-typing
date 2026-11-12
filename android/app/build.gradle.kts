@@ -8,23 +8,33 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.kothaflow.ime"
+        applicationId = "com.kothaflow.studio"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("kothaflow.jks")
+            storePassword = "kothaflow123"
+            keyAlias = "kothaflow"
+            keyPassword = "kothaflow123"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
         debug {
-            applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("release")
             isDebuggable = true
         }
     }
