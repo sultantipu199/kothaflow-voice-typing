@@ -19,9 +19,10 @@ function createBubbleWindow() {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    skipTaskbar: false,
+    skipTaskbar: true,
     resizable: false,
     hasShadow: true,
+    focusable: false,
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,

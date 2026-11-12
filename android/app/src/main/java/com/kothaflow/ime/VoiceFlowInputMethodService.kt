@@ -24,6 +24,36 @@ import androidx.core.content.ContextCompat
 
 class VoiceFlowInputMethodService : InputMethodService() {
 
+    companion object {
+        var activeInputConnection: InputConnection? = null
+            private set
+        var activeInstance: VoiceFlowInputMethodService? = null
+            private set
+
+        fun commitTextDirectly(text: String): Boolean {
+            val ic = activeInputConnection ?: activeInstance?.currentInputConnection ?: return false
+            return try {
+                ic.commitText(text, 1)
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        activeInstance = this
+        activeInputConnection = currentInputConnection
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        if (finishingInput) {
+            activeInputConnection = null
+            if (activeInstance == this) activeInstance = null
+        }
+    }
+
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
     private var currentLangCode = "bn-BD"

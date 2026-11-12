@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
@@ -18,32 +19,18 @@ class KothaFlowAccessibilityService : AccessibilityService() {
         fun isRunning(): Boolean = instance != null
     }
 
-    private var lastFocusedNode: AccessibilityNodeInfo? = null
-
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        Log.d("KothaFlowAccess", "Accessibility service connected")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null) return
-
-        // Continuously track the active editable text box across Messenger, WhatsApp, etc.
-        val eventType = event.eventType
-        if (eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED ||
-            eventType == AccessibilityEvent.TYPE_VIEW_CLICKED ||
-            eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ||
-            eventType == AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED) {
-
-            val source = event.source
-            if (source != null && source.isEditable) {
-                lastFocusedNode = source
-            }
-        }
+        // Real-time events monitored
     }
 
     override fun onInterrupt() {
-        // Service interrupted
+        Log.d("KothaFlowAccess", "Accessibility service interrupted")
     }
 
     override fun onDestroy() {
@@ -51,98 +38,132 @@ class KothaFlowAccessibilityService : AccessibilityService() {
         if (instance == this) {
             instance = null
         }
-        lastFocusedNode = null
     }
 
     /**
-     * Types or pastes text DIRECTLY into the active cursor in whatever app is open
-     * (Messenger, WhatsApp, Chrome, Facebook, Notes, etc.) without requiring manual paste.
+     * Finds the active editable text node freshly across all active and interactive windows.
+     */
+    private fun findActiveInputNode(): AccessibilityNodeInfo? {
+        // Priority 1: Check rootInActiveWindow
+        try {
+            val root = rootInActiveWindow
+            if (root != null) {
+                val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+                if (focused != null && focused.isEditable) {
+                    return focused
+                }
+                val focusedEditable = findFirstMatching(root) { it.isFocused && it.isEditable }
+                if (focusedEditable != null) return focusedEditable
+
+                val anyEditable = findFirstMatching(root) { it.isEditable }
+                if (anyEditable != null) return anyEditable
+            }
+        } catch (e: Exception) {
+            Log.w("KothaFlowAccess", "rootInActiveWindow scan error: ${e.message}")
+        }
+
+        // Priority 2: Check all interactive windows (checking focused / application windows first)
+        try {
+            val currentWindows = windows
+            if (!currentWindows.isNullOrEmpty()) {
+                val sorted = currentWindows.sortedByDescending {
+                    (if (it.isFocused) 10 else 0) + (if (it.type == AccessibilityWindowInfo.TYPE_APPLICATION) 5 else 0)
+                }
+
+                for (win in sorted) {
+                    val root = win.root ?: continue
+                    val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+                    if (focused != null && focused.isEditable) {
+                        return focused
+                    }
+                    val focusedEditable = findFirstMatching(root) { it.isFocused && it.isEditable }
+                    if (focusedEditable != null) return focusedEditable
+
+                    val anyEditable = findFirstMatching(root) { it.isEditable }
+                    if (anyEditable != null) return anyEditable
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("KothaFlowAccess", "windows scan error: ${e.message}")
+        }
+
+        return null
+    }
+
+    private fun findFirstMatching(root: AccessibilityNodeInfo?, predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo? {
+        if (root == null) return null
+        if (predicate(root)) return root
+
+        val count = root.childCount
+        for (i in 0 until count) {
+            val child = root.getChild(i) ?: continue
+            val match = findFirstMatching(child, predicate)
+            if (match != null) return match
+        }
+        return null
+    }
+
+    /**
+     * Types or pastes text DIRECTLY into the active write box in whatever app is open
+     * (Messenger, WhatsApp, Chrome, Facebook, Notes, Telegram, etc.) without requiring manual paste.
      */
     fun insertTextIntoFocusedInput(textToInsert: String): Boolean {
         if (textToInsert.isBlank()) return false
 
         try {
-            // Put text into clipboard first to ensure instant pasting support
+            // Keep clipboard populated as a seamless baseline
             copyToClipboard(textToInsert)
 
-            // Step 1: Find the target editable node in the active application window
-            var targetNode: AccessibilityNodeInfo? = null
-
-            // Search through active application windows (behind our floating overlay)
-            val currentWindows = windows
-            if (!currentWindows.isNullOrEmpty()) {
-                for (window in currentWindows) {
-                    if (window.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
-                        val root = window.root ?: continue
-                        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-                        if (focused != null && focused.isEditable) {
-                            targetNode = focused
-                            break
-                        }
-                        val editable = findEditableNode(root)
-                        if (editable != null) {
-                            targetNode = editable
-                            break
-                        }
-                    }
-                }
-            }
-
-            // Step 2: If not found in windows, check cached lastFocusedNode
-            if (targetNode == null && lastFocusedNode != null) {
-                targetNode = lastFocusedNode
-            }
-
-            // Step 3: If still not found, check rootInActiveWindow
-            if (targetNode == null) {
-                val root = rootInActiveWindow
-                if (root != null) {
-                    targetNode = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: findEditableNode(root)
-                }
-            }
-
-            // Step 4: Perform direct typing/pasting into the target box
+            val targetNode = findActiveInputNode()
             if (targetNode != null) {
-                // Ensure focus on target node
+                // Request focus on target
                 targetNode.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
 
-                // Strategy A: Native ACTION_PASTE (Triggers Messenger/WhatsApp input listeners & send button)
-                val pasteSuccess = targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
-                if (pasteSuccess) {
+                // Strategy A: Direct ACTION_SET_TEXT (Instantly puts text into the write box)
+                val currentText = targetNode.text?.toString() ?: ""
+                val combinedText = if (currentText.isEmpty()) {
+                    textToInsert
+                } else if (currentText.endsWith(" ")) {
+                    "$currentText$textToInsert"
+                } else {
+                    "$currentText $textToInsert"
+                }
+
+                val args = Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, combinedText)
+                }
+                val setSuccess = targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+
+                if (setSuccess) {
+                    // Position cursor at the very end
+                    val selArgs = Bundle().apply {
+                        putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, combinedText.length)
+                        putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, combinedText.length)
+                    }
+                    targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, selArgs)
+                    Log.d("KothaFlowAccess", "Successfully direct-typed via ACTION_SET_TEXT")
                     return true
                 }
 
-                // Strategy B: Direct ACTION_SET_TEXT (Appends to existing text)
-                val existing = targetNode.text?.toString() ?: ""
-                val combined = if (existing.isEmpty()) textToInsert else "$existing $textToInsert"
-                val args = Bundle().apply {
-                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, combined)
-                }
-                val setSuccess = targetNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-                if (setSuccess) {
+                // Strategy B: Native ACTION_PASTE (For custom text controls that reject ACTION_SET_TEXT)
+                val pasteSuccess = targetNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                if (pasteSuccess) {
+                    Log.d("KothaFlowAccess", "Successfully direct-typed via ACTION_PASTE")
                     return true
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("KothaFlowAccess", "insertTextIntoFocusedInput exception: ${e.message}")
+        }
 
-        // Fallback: Clipboard is already updated
         return false
     }
 
-    private fun findEditableNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
-        if (node == null) return null
-        if (node.isEditable) return node
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            val result = findEditableNode(child)
-            if (result != null) return result
-        }
-        return null
-    }
-
     private fun copyToClipboard(text: String) {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("KothaFlow Text", text)
-        clipboard.setPrimaryClip(clip)
+        try {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("KothaFlow Text", text)
+            clipboard.setPrimaryClip(clip)
+        } catch (_: Exception) {}
     }
 }

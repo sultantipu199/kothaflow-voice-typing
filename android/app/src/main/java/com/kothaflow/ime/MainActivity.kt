@@ -66,14 +66,41 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Accessibility Service Button
         btnEnableAccessibility.setOnClickListener {
-            try {
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !KothaFlowAccessibilityService.isRunning()) {
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("⚡ সরাসরি বক্সে অটো-টাইপ চালু করার নিয়ম")
+                    .setMessage("অ্যান্ড্রয়েড ১৩/১৪ এ সরাসরি রাইট বক্সে লেখার জন্য ২টি ছোট ধাপ লাগবে:\n\n" +
+                            "ধাপ ১: 'App Info খুলুন' চেপে উপরের ডানদিকের ৩টি ডট (⋮) থেকে 'Allow restricted settings' অনুমতি দিন।\n\n" +
+                            "ধাপ ২: 'অ্যাক্সেসিবিলিটি খুলুন' চেপে তালিকা থেকে 'KothaFlow Auto-Type' চালু করে দিন।")
+                    .setPositiveButton("১. App Info খুলুন") { _, _ ->
+                        try {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", packageName, null)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            startActivity(intent)
+                        } catch (_: Exception) {}
+                    }
+                    .setNegativeButton("২. অ্যাক্সেসিবিলিটি খুলুন") { _, _ ->
+                        try {
+                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            startActivity(intent)
+                        } catch (_: Exception) {}
+                    }
+                    .setNeutralButton("বাতিল", null)
+                    .show()
+            } else {
+                try {
+                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    startActivity(intent)
+                    Toast.makeText(this, "তালিকা থেকে 'KothaFlow Auto-Type' চালু করুন", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "অ্যাক্সেসিবিলিটি সেটিংস খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
                 }
-                startActivity(intent)
-                Toast.makeText(this, "তালিকা থেকে 'KothaFlow Auto-Type' চালু করুন", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "অ্যাক্সেসিবিলিটি সেটিংস খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
             }
         }
 

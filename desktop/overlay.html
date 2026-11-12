@@ -220,6 +220,16 @@
     let recognition = null;
     let isRecording = false;
     let spokenResult = '';
+    let silenceTimer = null;
+
+    function resetSilenceTimer() {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        if (isRecording && (spokenResult || (transcriptText.innerText && transcriptText.innerText !== 'শুনছি... মুখে বলুন...'))) {
+          stopAndCommit();
+        }
+      }, 1600);
+    }
 
     // Initialize Web Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -255,6 +265,7 @@
             }
           }
           transcriptText.innerText = spokenResult || interim || 'শুনছি...';
+          resetSilenceTimer();
         };
 
         recognition.onerror = (e) => {
@@ -279,11 +290,12 @@
       fillers.forEach(f => {
         clean = clean.replace(new RegExp(f, 'gi'), ' ');
       });
-      return clean.trim().replace(/\\s+/g, ' ');
+      return clean.trim().replace(/\s+/g, ' ');
     }
 
     function stopAndCommit() {
       if (!isRecording) return;
+      if (silenceTimer) clearTimeout(silenceTimer);
       isRecording = false;
       if (recognition) {
         try { recognition.stop(); } catch(_) {}
@@ -298,6 +310,7 @@
     }
 
     function cancelRecording() {
+      if (silenceTimer) clearTimeout(silenceTimer);
       isRecording = false;
       if (recognition) {
         try { recognition.stop(); } catch(_) {}

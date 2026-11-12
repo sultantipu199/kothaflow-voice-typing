@@ -1,6 +1,6 @@
 {
   "name": "kothaflow-desktop",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "KothaFlow Desktop Voice Typing (Wispr Flow Style Floating Bubble)",
   "main": "electron-main.cjs",
   "author": "KothaFlow",

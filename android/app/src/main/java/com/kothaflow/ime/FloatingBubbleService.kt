@@ -388,19 +388,24 @@ class FloatingBubbleService : Service() {
         if (text.isNotEmpty()) {
             vibrateDevice()
 
-            val accessibilityService = KothaFlowAccessibilityService.instance
-            var directlyTyped = false
-            if (accessibilityService != null) {
-                directlyTyped = accessibilityService.insertTextIntoFocusedInput(text)
+            // 1. Direct typing via active InputConnection (if KothaFlow IME is active)
+            var directlyTyped = VoiceFlowInputMethodService.commitTextDirectly("$text ")
+
+            // 2. Direct typing via Accessibility Service (works seamlessly with Gboard, Messenger, WhatsApp, etc.)
+            if (!directlyTyped) {
+                val accessibilityService = KothaFlowAccessibilityService.instance
+                if (accessibilityService != null) {
+                    directlyTyped = accessibilityService.insertTextIntoFocusedInput(text)
+                }
             }
 
             if (directlyTyped) {
-                Toast.makeText(this, "✓ সরাসরি টাইপ সম্পন্ন হয়েছে", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "✓ সরাসরি বক্সে টাইপ সম্পন্ন হয়েছে", Toast.LENGTH_SHORT).show()
             } else {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 val clip = android.content.ClipData.newPlainText("KothaFlow Text", text)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "✓ টেক্সট প্রস্তুত (ক্লিপবোর্ডে কপি করা হয়েছে)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "⚠️ সরাসরি টাইপিংয়ের জন্য KothaFlow Auto-Type অন করুন (ক্লিপবোর্ডে কপি করা হয়েছে)", Toast.LENGTH_LONG).show()
             }
         }
 
