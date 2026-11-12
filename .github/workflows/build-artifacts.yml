@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.5.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.5.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.5.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.5.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.6.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.6.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.6.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.6.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.5.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.6.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -117,34 +117,30 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.5
+          tag_name: v1.1.6
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.1.5 — Native Win32 Paste Engine & Seamless Cursor Auto-Typing
+          name: KothaFlow v1.1.6 — Full Whisper-Large-v3 + 27B AI Brain Polish & Instant Typing
           body: |
-            ## 🎙️ KothaFlow Studio v1.1.5 — 100% Reliable Native Win32 Auto-Typing
+            ## 🎙️ KothaFlow Studio v1.1.6 — Human-Level Bengali AI Brain & Voice Typing
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.1.5.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Setup-v1.1.5.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.1.6.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Setup-v1.1.6.exe)**
               - *1-Click Windows Installer:* Installs KothaFlow and **automatically creates a Desktop Shortcut**!
-              - *Native Win32 Paste Engine:* Uses native C# `paste.exe` to inject `Ctrl+V` with zero focus loss, typing instantly into Notepad, Word, Chrome, WhatsApp!
-              - *Pre-configured Engine:* Groq Whisper API Key is already pre-configured. Zero dialogs, zero setup!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Portable.exe)**
+              - *Dual AI Brain Architecture:* Full `whisper-large-v3` + 27B LLM Brain polishes Bengali into fluent, 100% natural sentences with punctuation (।, ?, !).
+              - *Native Win32 Paste Engine:* Uses native C# `paste.exe` to inject `Ctrl+V` with zero focus loss directly into Notepad, Word, Chrome, WhatsApp!
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.1.5.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.5/KothaFlow-VoiceTyping-v1.1.5.apk)**
+            - **[KothaFlow-VoiceTyping-v1.1.6.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-VoiceTyping-v1.1.6.apk)**
               - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
 
-            ### 🚀 Fixed in v1.1.5:
-            - **নেটিভ Win32 পেস্ট ইঞ্জিন:** WScript এর পরিবর্তে বিল্ট-ইন নেটিভ `paste.exe` যুক্ত করা হয়েছে যা ফোকাস না হারিয়ে সরাসরি যে কোনো রাইট বক্সে লেখা টাইপ করে দেয়।
-            - **উইন্ডো ব্লার হ্যান্ডলার:** কথা শেষ হওয়ার সাথে সাথে বাবল আগের সক্রিয় অ্যাপ্লিকেশনকে (যেমন: নোটপ্যাড বা ওয়ার্ড) ফোকাস ফিরিয়ে দেয়।
-            - **ইনস্ট্যান্ট গ্রোক হুইস্পার:** এপিআই কী কোনো প্রম্পট ছাড়াই স্বয়ংক্রিয়ভাবে সক্রিয়।
-            - **কিবোর্ড শর্টকাট:** যেকোনো অ্যাপে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
-            - **মাউস হোল্ড-টু-স্পিক:** বাবলে মাউস দিয়ে চেপে ধরে কথা বলুন, ছেড়ে দিলে স্বয়ংক্রিয়ভাবে কার্সরে টাইপ হয়ে যাবে।
-            - **কিবোর্ড শর্টকাট:** যেকোনো অ্যাপে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বলা যাবে।
-            - **সেলফ-হিলিং ও প্রাইভেসী ইঞ্জিন:** জিরো অডিও স্টোরেজ এবং লোকাল অ্যাডাপ্টিভ ডিকশনারি।
+            ### 🚀 Fixed & Upgraded in v1.1.6:
+            - **১০০% নির্ভুল বাংলা রিকগনিশন (AI Brain Integration):** ফুল `whisper-large-v3` এর সাথে ২৭ বিলিয়ন প্যারামিটারের এআই ব্রেইন যুক্ত করা হয়েছে, যা কথ্য বাংলা কথার ভুল শুধরে শুদ্ধ ব্যাকরণ ও যতিচিহ্নসহ (দাঁড়ি, কমা) সাজিয়ে দেয়।
+            - **সরাসরি কার্সরে অটো-টাইপ:** নেটিভ Win32 পেস্ট ইঞ্জিনের মাধ্যমে কোনো ক্লিক ছাড়াই সক্রিয় বক্সে স্বয়ংক্রিয়ভাবে টাইপ হয়।
+            - **কিবোর্ড শর্টকাট:** যেকোনো উইন্ডোতে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
           files: release-files/**
           draft: false
           prerelease: false

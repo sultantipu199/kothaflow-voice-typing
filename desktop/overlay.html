@@ -295,8 +295,11 @@
       try {
         const formData = new FormData();
         formData.append('file', audioBlob, 'recording.webm');
-        formData.append('model', 'whisper-large-v3-turbo');
+        formData.append('model', 'whisper-large-v3');
         formData.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
+        if (currentLang === 'bn-BD') {
+          formData.append('prompt', 'বাংলা ভাষায় কথোপকথন ও শুদ্ধ ভয়েস টাইপিং। যেমন: কেমন আছেন, ধন্যবাদ, আমি ভালো আছি, ইনশাআল্লাহ, দাঁড়ি।');
+        }
         formData.append('response_format', 'json');
 
         const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
@@ -309,7 +312,43 @@
 
         const data = await response.json();
         if (data && data.text && data.text.trim()) {
-          const finalSpoken = data.text.trim();
+          let finalSpoken = data.text.trim();
+
+          // 🧠 AI Brain Enhancement: Polish grammar, clean fillers, and add perfect punctuation
+          if (currentLang === 'bn-BD') {
+            try {
+              transcriptText.innerText = 'AI ব্রেইন সাজাচ্ছে...';
+              const brainResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  model: 'qwen/qwen3.8-27b',
+                  messages: [
+                    {
+                      role: 'system',
+                      content: 'You are an intelligent Bengali speech polishing AI. Convert the transcribed Bengali speech into fluent, 100% natural, grammatically correct Bengali with appropriate punctuation (।, ?, !). Correct any obvious phonetic mishearings. Remove speech hesitation fillers (যেমন: আআ, উম, uh, um). Keep English technical loanwords in natural Bengali script or original English as appropriate. Output ONLY the polished text with no surrounding quotes, markdown, or explanation.'
+                    },
+                    { role: 'user', content: finalSpoken }
+                  ],
+                  temperature: 0.1,
+                  max_tokens: 400
+                })
+              });
+              const brainData = await brainResp.json();
+              if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
+                const cleanedText = brainData.choices[0].message.content.trim();
+                if (cleanedText) {
+                  finalSpoken = cleanedText;
+                }
+              }
+            } catch (brainErr) {
+              console.log('AI Brain bypass to raw transcript:', brainErr);
+            }
+          }
+
           transcriptText.innerText = finalSpoken;
           ipcRenderer.send('commit-speech', finalSpoken);
           setTimeout(resetToIdle, 700);
