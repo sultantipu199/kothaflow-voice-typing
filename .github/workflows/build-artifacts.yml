@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.4.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.4.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.4.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.4.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.5.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.5.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.5.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.5.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -88,21 +88,21 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
+          tag_name: v1.0.5
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.0.4 — Direct Auto-Typing & Ultra-Fast Voice Dictation
+          name: KothaFlow v1.0.5 — Custom Avatar & Watery Translucent Bubble
           body: |
-            ## 🎙️ KothaFlow Studio v1.0.4 — Direct Download Links
+            ## 🎙️ KothaFlow Studio v1.0.5 — Direct Download Links
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.0.4.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.4/KothaFlow-VoiceTyping-v1.0.4.apk)**
-              - *Direct Auto-Typing:* Now types DIRECTLY into the active cursor in Messenger, WhatsApp, Chrome, Facebook, etc. without needing to tap paste!
-              - *Ultra-Fast Response:* Zero silence delay — words appear instantly when you stop speaking.
-              - *Keep your Google Keyboard (Gboard):* The floating mic bubble stays on your screen ready to dictate into any app!
+            - **[KothaFlow-VoiceTyping-v1.0.5.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.5/KothaFlow-VoiceTyping-v1.0.5.apk)**
+              - *Custom App Icon & Avatar:* App launcher icon and floating bubble now feature your custom portrait with a watery ring!
+              - *Watery Translucent Look:* The floating bubble has 35% watery opacity so it smoothly blends into your screen without obstructing your view or chats. Touches highlight it smoothly.
+              - *Direct Auto-Typing:* Types directly into Messenger, WhatsApp, Chrome, Notes with 0 delay!
 
             ### 💻 Desktop (Windows):
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.4/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Installation:* Extract ZIP on your PC, double-click `run-windows.bat`. Press `Ctrl+Shift+Space` or click the floating bubble to type directly at cursor in any software!
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.5/KothaFlow-Desktop-Windows-v1.0.zip)**
+              - *Watery Glass Widget:* Features your photo with subtle 35% glass transparency on your desktop screen!
           files: release-files/**
           draft: false
           prerelease: false

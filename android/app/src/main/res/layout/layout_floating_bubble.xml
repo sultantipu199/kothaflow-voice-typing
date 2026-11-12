@@ -4,21 +4,32 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <!-- 1. Circular Idle Bubble (Wispr Flow Style) -->
+    <!-- 1. Circular Idle Bubble (Watery Glass Droplet with User Avatar) -->
     <RelativeLayout
         android:id="@+id/bubbleIdleView"
-        android:layout_width="58dp"
-        android:layout_height="58dp"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:background="@drawable/bg_floating_bubble"
-        android:elevation="12dp">
+        android:elevation="6dp">
+
+        <ImageView
+            android:id="@+id/imgBubbleAvatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_bubble_avatar"
+            android:contentDescription="User Avatar Voice Bubble" />
 
         <ImageView
             android:id="@+id/imgBubbleMic"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_centerInParent="true"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:background="#800F172A"
+            android:padding="2dp"
             android:src="@android:drawable/ic_btn_speak_now"
-            android:contentDescription="Voice Dictation Bubble" />
+            android:contentDescription="Mic Icon" />
 
         <TextView
             android:id="@+id/tvBubbleLangBadge"
@@ -26,12 +37,12 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
-            android:background="#2563EB"
+            android:background="#990284C7"
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
             android:text="বা"
             android:textColor="#FFFFFF"
-            android:textSize="9sp"
+            android:textSize="8sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
@@ -39,7 +50,7 @@
     <LinearLayout
         android:id="@+id/bubblePillView"
         android:layout_width="wrap_content"
-        android:layout_height="56dp"
+        android:layout_height="54dp"
         android:background="@drawable/bg_recording_pill"
         android:elevation="14dp"
         android:gravity="center_vertical"

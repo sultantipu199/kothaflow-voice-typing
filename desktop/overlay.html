@@ -20,43 +20,58 @@
       overflow: hidden;
     }
 
-    /* 1. Compact Idle Bubble */
+    /* 1. Compact Watery Idle Bubble */
     #idleBubble {
-      width: 58dp;
       width: 58px;
       height: 58px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8, #0f172a);
-      border: 2px solid #38bdf8;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.4);
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, rgba(15, 23, 42, 0.35) 100%);
+      border: 1.5px solid rgba(224, 242, 254, 0.45);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(56, 189, 248, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       position: relative;
       -webkit-app-region: drag;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      opacity: 0.35;
+      backdrop-filter: blur(6px);
+      transition: opacity 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
     }
     #idleBubble:hover {
-      transform: scale(1.06);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 22px rgba(56, 189, 248, 0.6);
+      opacity: 0.95;
+      transform: scale(1.08);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(56, 189, 248, 0.5);
+    }
+    .avatar-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      pointer-events: none;
     }
     .mic-icon {
-      width: 24px;
-      height: 24px;
-      fill: #ffffff;
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 50%;
+      padding: 2px;
+      fill: #38bdf8;
       -webkit-app-region: no-drag;
     }
     .lang-badge {
       position: absolute;
       bottom: 2px;
       right: 2px;
-      background: #38bdf8;
+      background: rgba(56, 189, 248, 0.85);
       color: #0f172a;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 6px;
+      padding: 1px 3px;
+      border-radius: 5px;
       -webkit-app-region: no-drag;
     }
 
@@ -151,8 +166,9 @@
 </head>
 <body>
 
-  <!-- Idle Bubble -->
-  <div id="idleBubble" title="ক্লিক করে কথা বলুন (ডান-ক্লিকে মেনু)">
+  <!-- Watery Idle Bubble with User Avatar -->
+  <div id="idleBubble" title="ক্লিক করে কথা বলুন (টেনে সরানো যায়, ডান-ক্লিকে মেনু)">
+    <img src="avatar.png" class="avatar-img" alt="KothaFlow Avatar" />
     <svg class="mic-icon" viewBox="0 0 24 24">
       <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
       <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>

@@ -156,6 +156,9 @@ class FloatingBubbleService : Service() {
         btnPillDone = floatingView?.findViewById(R.id.btnPillDone)
         btnPillClose = floatingView?.findViewById(R.id.btnPillClose)
 
+        // Watery translucent appearance when idle on screen
+        bubbleIdleView?.alpha = 0.35f
+
         tvBubbleLangBadge?.text = currentLangShort
 
         // Switch language on long click of idle bubble
@@ -204,6 +207,7 @@ class FloatingBubbleService : Service() {
                         initialTouchX = event.rawX
                         initialTouchY = event.rawY
                         isDragging = false
+                        bubbleIdleView?.animate()?.alpha(1.0f)?.setDuration(120)?.start()
                         return false // Allow click listener to trigger if not dragged
                     }
                     MotionEvent.ACTION_MOVE -> {
@@ -221,6 +225,9 @@ class FloatingBubbleService : Service() {
                         return isDragging
                     }
                     MotionEvent.ACTION_UP -> {
+                        if (!isRecording) {
+                            bubbleIdleView?.animate()?.alpha(0.35f)?.setDuration(250)?.start()
+                        }
                         if (isDragging) {
                             // Snap to edge
                             snapToNearestEdge()
@@ -363,6 +370,7 @@ class FloatingBubbleService : Service() {
         mainHandler.post {
             bubblePillView?.visibility = View.GONE
             bubbleIdleView?.visibility = View.VISIBLE
+            bubbleIdleView?.animate()?.alpha(0.35f)?.setDuration(300)?.start()
         }
     }
 

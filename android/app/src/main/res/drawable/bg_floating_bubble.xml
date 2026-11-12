@@ -3,13 +3,13 @@
     android:shape="oval">
     <gradient
         android:angle="135"
-        android:startColor="#2563EB"
-        android:centerColor="#1D4ED8"
-        android:endColor="#0F172A"
+        android:startColor="#3338BDF8"
+        android:centerColor="#220284C7"
+        android:endColor="#150F172A"
         android:type="linear" />
     <stroke
-        android:width="2dp"
-        android:color="#38BDF8" />
+        android:width="1.5dp"
+        android:color="#4DE0F2FE" />
     <size
         android:width="56dp"
         android:height="56dp" />
