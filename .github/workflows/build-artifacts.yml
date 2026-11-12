@@ -59,10 +59,10 @@ jobs:
         run: |
           cd desktop
           npm install
-          npx electron-builder --win portable
+          npx electron-builder --win portable --publish never
           cd ..
           New-Item -ItemType Directory -Force -Path build-output
-          $exeFile = Get-ChildItem -Path desktop/dist/*.exe | Select-Object -First 1
+          $exeFile = Get-ChildItem -Path desktop/dist/*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($exeFile) {
             Copy-Item $exeFile.FullName -Destination build-output/KothaFlow-Desktop-Portable.exe -Force
           }
