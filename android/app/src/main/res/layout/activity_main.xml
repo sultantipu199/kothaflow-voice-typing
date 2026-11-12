@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#090D16"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- App Brand Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="20dp">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@mipmap/ic_launcher"
+                android:contentDescription="KothaFlow App Icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="KothaFlow Studio"
+                android:textColor="#F8FAFC"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="বাংলা ও ইংরেজি এআই ভয়েস টাইপিং কিবোর্ড"
+                android:textColor="#94A3B8"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Activation Steps Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="কিবোর্ড সেটআপ ও চালু করুন:"
+                android:textColor="#38BDF8"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Step 1 Button -->
+            <Button
+                android:id="@+id/btnEnableKeyboard"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_btn_primary"
+                android:text="১. কীবোর্ড সেটিংস এ KothaFlow অন করুন"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Step 2 Button -->
+            <Button
+                android:id="@+id/btnSelectKeyboard"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_btn_secondary"
+                android:text="২. KothaFlow কিবোর্ড সিলেক্ট করুন"
+                android:textColor="#F8FAFC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="● কিবোর্ড স্ট্যাটাস চেক করা হচ্ছে..."
+                android:textColor="#10B981"
+                android:textSize="13sp"
+                android:paddingTop="4dp" />
+        </LinearLayout>
+
+        <!-- Interactive Voice Test Lab Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ভয়েস টাইপিং টেস্ট বক্স:"
+                android:textColor="#F8FAFC"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etTestInput"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:background="@drawable/bg_btn_secondary"
+                android:gravity="top|start"
+                android:hint="এখানে ক্লিক করে কিবোর্ড চেক করুন অথবা নিচের মাইকে কথা বলুন..."
+                android:padding="12dp"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp">
+
+                <ImageButton
+                    android:id="@+id/btnTestMic"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:background="@drawable/bg_btn_mic"
+                    android:src="@android:drawable/ic_btn_speak_now"
+                    android:contentDescription="ভয়েস রেকর্ড করুন" />
+
+                <TextView
+                    android:id="@+id/tvMicStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="মাইক চেপে কথা বলুন (বাংলা বা ইংরেজি)"
+                    android:textColor="#94A3B8"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Messenger & WhatsApp Usage Instructions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="যেকোনো অ্যাপে (Messenger, WhatsApp) ব্যবহারের নিয়ম:"
+                android:textColor="#F8FAFC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="4dp"
+                android:text="১. মেসেঞ্জারে বা হোয়াটসঅ্যাপে যেকোনো লেখার বক্সে ক্লিক করুন।\n২. কীবোর্ডের নিচের ডানপাশের ছোট কিবোর্ড আইকনে চেপে 'KothaFlow' সিলেক্ট করুন।\n৩. KothaFlow কিবোর্ডের বড় মাইক বাটনে ট্যাপ করে কথা বলুন।\n৪. 'um', 'আআ' জাতীয় কথা বাদ দিয়ে স্বয়ংক্রিয়ভাবে নির্ভুল দাঁড়ি ও কমা সহ মেসেজ টাইপ হয়ে যাবে!"
+                android:textColor="#94A3B8"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

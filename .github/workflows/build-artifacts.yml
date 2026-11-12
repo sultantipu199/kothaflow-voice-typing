@@ -94,13 +94,15 @@ jobs:
 
             ### 📱 Mobile (Android):
             - **[KothaFlow-VoiceTyping-v1.0.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.0/KothaFlow-VoiceTyping-v1.0.apk)**
-              - *Installation:* Download APK to your phone, tap to install, and enable "KothaFlow Voice Keyboard" in Settings > Languages & Input.
+              - *Installation:* Download APK to your phone, install it, open the KothaFlow app from your app drawer, and follow the 2-step setup wizard!
+              - *Usage in Messenger/WhatsApp:* Tap any chat text box, switch to KothaFlow keyboard, and tap the big mic button to speak.
 
-            ### 💻 Desktop (Windows & Mac):
+            ### 💻 Desktop (Windows):
             - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.0/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Installation:* Extract ZIP on your PC, double-click `run-windows.bat`. Press `Ctrl+Shift+Space` in any app (Word, Notepad, Chrome) to dictate!
+              - *Installation:* Extract ZIP on your PC, double-click `run-windows.bat`. Press `Ctrl+Shift+Space` in any app to dictate!
           files: release-files/**
           draft: false
           prerelease: false
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
