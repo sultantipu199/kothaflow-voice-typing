@@ -272,41 +272,49 @@ app.whenReady().then(() => {
     currentLang = lang;
   });
 
-  // Global Shortcuts: F8 & Ctrl+Shift+Space (Push-to-Talk / Toggle)
-  globalShortcut.register('F8', () => {
-    if (bubbleWindow) {
-      bubbleWindow.webContents.send('toggle-recording-hotkey');
-    }
-  });
-
-  globalShortcut.register('Ctrl+Shift+Space', () => {
-    if (bubbleWindow) {
-      bubbleWindow.webContents.send('toggle-recording-hotkey');
-    }
-  });
+  // Global Shortcuts: F8, Ctrl+Shift+Space, Ctrl+Alt+Space (Push-to-Talk / Toggle)
+  try {
+    globalShortcut.register('F8', () => {
+      if (bubbleWindow) bubbleWindow.webContents.send('toggle-recording-hotkey');
+    });
+    globalShortcut.register('Ctrl+Shift+Space', () => {
+      if (bubbleWindow) bubbleWindow.webContents.send('toggle-recording-hotkey');
+    });
+    globalShortcut.register('Ctrl+Alt+Space', () => {
+      if (bubbleWindow) bubbleWindow.webContents.send('toggle-recording-hotkey');
+    });
+  } catch (e) {
+    console.warn('Global shortcut registration warning:', e.message);
+  }
 
   // Context Menu
   ipcMain.on('show-context-menu', (event) => {
+    if (!bubbleWindow) return;
+    try {
+      bubbleWindow.setFocusable(true);
+      bubbleWindow.focus();
+    } catch (_) {}
+
     const contextMenu = Menu.buildFromTemplate([
       {
         label: '🇧🇩 বাংলা ভাষা',
         click: () => {
           currentLang = 'bn-BD';
-          bubbleWindow.webContents.send('switch-lang', 'bn-BD');
+          bubbleWindow && bubbleWindow.webContents.send('switch-lang', 'bn-BD');
         }
       },
       {
         label: '🇺🇸 English',
         click: () => {
           currentLang = 'en-US';
-          bubbleWindow.webContents.send('switch-lang', 'en-US');
+          bubbleWindow && bubbleWindow.webContents.send('switch-lang', 'en-US');
         }
       },
       { type: 'separator' },
       {
         label: '🔑 Groq API Key সেট করুন',
         click: () => {
-          bubbleWindow.webContents.send('open-api-modal');
+          bubbleWindow && bubbleWindow.webContents.send('open-api-modal');
         }
       },
       { label: '⌨️ শর্টকাট: F8 বা Ctrl+Shift+Space', enabled: false },
@@ -336,10 +344,17 @@ app.whenReady().then(() => {
           });
         }
       },
-      { label: '👁️ বাবল হাইড করুন (Hide)', click: () => bubbleWindow.hide() },
+      { label: '👁️ বাবল হাইড করুন (Hide)', click: () => bubbleWindow && bubbleWindow.hide() },
       { label: '❌ KothaFlow বন্ধ করুন (Exit)', click: () => app.quit() }
     ]);
-    contextMenu.popup(BrowserWindow.fromWebContents(event.sender));
+    contextMenu.popup({
+      window: bubbleWindow || BrowserWindow.fromWebContents(event.sender),
+      callback: () => {
+        try {
+          if (bubbleWindow) bubbleWindow.setFocusable(false);
+        } catch (_) {}
+      }
+    });
   });
 
   console.log('[KothaFlow] Desktop Bubble is active! Global Shortcuts: F8, Ctrl+Shift+Space');
