@@ -29,6 +29,10 @@ function createBubbleWindow() {
 
   bubbleWindow.loadFile(path.join(__dirname, 'overlay.html'));
   bubbleWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  // Security hardening: Prevent any external window opening or malicious navigation
+  bubbleWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  bubbleWindow.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
 function pasteAtCursor(text) {

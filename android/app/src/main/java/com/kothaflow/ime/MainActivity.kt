@@ -153,6 +153,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "ভয়েস টাইপিংয়ের জন্য মাইক্রোফোন অনুমতি দিন", Toast.LENGTH_SHORT).show()
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                REQ_AUDIO_PERMISSION
+            )
+            return
+        }
+
         if (FloatingBubbleService.isRunning) {
             val stopIntent = Intent(this, FloatingBubbleService::class.java).apply {
                 action = FloatingBubbleService.ACTION_STOP
@@ -194,11 +205,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestAudioPermissionIfNeeded() {
+        val permissionsToRequest = mutableListOf<String>()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        if (permissionsToRequest.isNotEmpty()) {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(Manifest.permission.RECORD_AUDIO),
+                permissionsToRequest.toTypedArray(),
                 REQ_AUDIO_PERMISSION
             )
         }

@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.6.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.6.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.6.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.6.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.7.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.7.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.7.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.0.7.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -88,23 +88,24 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.6
+          tag_name: v1.0.7
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.0.6 — Free Draggable Bubble & Hide Controls (Mobile + Desktop)
+          name: KothaFlow v1.0.7 — Production Hardened & Final Delivery
           body: |
-            ## 🎙️ KothaFlow Studio v1.0.6 — Direct Download Links
+            ## 🎙️ KothaFlow Studio v1.0.7 — Production Final Delivery
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.0.6.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.6/KothaFlow-VoiceTyping-v1.0.6.apk)**
-              - *Free Screen Draggability:* Smoothly drag the watery bubble anywhere across your phone screen and place it wherever you want!
-              - *Long-Press Controls:* Long press the bubble to toggle language or manage it. Tap notification to hide or close anytime.
-              - *Custom Avatar Icon:* Your custom portrait with a watery translucent glow.
-              - *Direct Auto-Typing:* Real-time typing directly into Messenger, WhatsApp, Chrome, Facebook, etc.
+            - **[KothaFlow-VoiceTyping-v1.0.7.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.7/KothaFlow-VoiceTyping-v1.0.7.apk)**
+              - *Security & Privacy Hardened:* End-to-end encrypted TLS strictly enforced (`usesCleartextTraffic="false"`), zero persistent audio file storage on disk (in-memory speech recognition), and safe foreground microphone service validation (Android 14+ safe).
+              - *Free Smooth Dragging:* Drag and place the watery bubble anywhere across your phone screen.
+              - *Direct Auto-Typing:* Real-time typing directly into Messenger, WhatsApp, Chrome, Facebook, etc. without needing to tap paste!
+              - *Your Custom Avatar Icon:* Installed with your custom portrait icon with watery blue glow.
 
             ### 💻 Desktop (Windows):
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.6/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Draggable Anywhere:* Click & drag the watery bubble anywhere on your monitors with 60fps precision!
-              - *Right-Click Menu:* Right click to hide bubble, switch language, or exit.
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.7/KothaFlow-Desktop-Windows-v1.0.zip)**
+              - *Security Hardened:* External window-opening protection and navigation lock enabled.
+              - *Draggable Anywhere:* Click & drag the watery bubble anywhere across monitors.
+              - *Direct Keystroke Injection:* Auto-pastes at cursor in 40ms in any application (Word, Notepad, Chrome, WhatsApp).
           files: release-files/**
           draft: false
           prerelease: false
