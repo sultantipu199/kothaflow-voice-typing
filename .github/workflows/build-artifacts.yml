@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.6.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.6.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.6.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.1.6.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.7.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.7.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.7.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.7.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.6.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.7.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -117,30 +117,32 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.6
+          tag_name: v1.1.7
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.1.6 — Full Whisper-Large-v3 + 27B AI Brain Polish & Instant Typing
+          name: KothaFlow v1.1.7 — Zero-Limit Dual-Model Auto-Failover & Strict Privacy
           body: |
-            ## 🎙️ KothaFlow Studio v1.1.6 — Human-Level Bengali AI Brain & Voice Typing
+            ## 🎙️ KothaFlow Studio v1.1.7 — Unlimited Usage, Dual-Engine Failover & Strict Privacy
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.1.6.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Setup-v1.1.6.exe)**
-              - *1-Click Windows Installer:* Installs KothaFlow and **automatically creates a Desktop Shortcut**!
-              - *Dual AI Brain Architecture:* Full `whisper-large-v3` + 27B LLM Brain polishes Bengali into fluent, 100% natural sentences with punctuation (।, ?, !).
-              - *Native Win32 Paste Engine:* Uses native C# `paste.exe` to inject `Ctrl+V` with zero focus loss directly into Notepad, Word, Chrome, WhatsApp!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.1.7.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.7/KothaFlow-Desktop-Setup-v1.1.7.exe)**
+              - *1-Click Windows Installer:* Installs KothaFlow and **creates a Desktop Shortcut**!
+              - *Zero Limit Failover:* Automatic multi-model fallback (`whisper-large-v3` ➔ `whisper-large-v3-turbo` ➔ 27B AI Brain) with non-expiring Groq key.
+              - *Strict Zero-Disk Privacy:* RAM-only audio buffers, zero audio stored on disk, 100% encrypted direct TLS 1.3 connection.
+              - *Native Win32 Paste Engine:* Uses native C# `paste.exe` to inject text instantly into any active cursor!
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.7/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.7/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.1.6.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.6/KothaFlow-VoiceTyping-v1.1.6.apk)**
-              - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
+            - **[KothaFlow-VoiceTyping-v1.1.7.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.7/KothaFlow-VoiceTyping-v1.1.7.apk)**
+              - *Unlimited & Free Native Engine:* Runs on Android native voice engine with zero tokens, zero expiration, and 100% offline/online reliability.
 
-            ### 🚀 Fixed & Upgraded in v1.1.6:
-            - **১০০% নির্ভুল বাংলা রিকগনিশন (AI Brain Integration):** ফুল `whisper-large-v3` এর সাথে ২৭ বিলিয়ন প্যারামিটারের এআই ব্রেইন যুক্ত করা হয়েছে, যা কথ্য বাংলা কথার ভুল শুধরে শুদ্ধ ব্যাকরণ ও যতিচিহ্নসহ (দাঁড়ি, কমা) সাজিয়ে দেয়।
-            - **সরাসরি কার্সরে অটো-টাইপ:** নেটিভ Win32 পেস্ট ইঞ্জিনের মাধ্যমে কোনো ক্লিক ছাড়াই সক্রিয় বক্সে স্বয়ংক্রিয়ভাবে টাইপ হয়।
-            - **কিবোর্ড শর্টকাট:** যেকোনো উইন্ডোতে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
+            ### 🚀 Fixed & Built in v1.1.7:
+            - **আনলিমিটেড ব্যবহারের সুরক্ষা (Zero Limits):** ডুয়াল-মডেল অটোমেটিক ফেইলওভার যুক্ত করা হয়েছে। প্রাইমারি মডেলে চাপ পড়লে স্বয়ংক্রিয়ভাবে টার্বো মডেলে শিফট হয়ে নিরবচ্ছিন্ন টাইপিং চালু রাখে।
+            - **১০০% কঠোর প্রাইভেসী প্রোটেকশন:** কোনো ভয়েস রেকর্ড ডিস্কে বা সার্ভারে জমা হয় না। মেমোরিতে প্রসেস হয়ে সাথে সাথে ওয়াইপ হয়ে যায়।
+            - **অটোমেটিক অ্যাটমিক অডিও রেকর্ডিং:** অডিও করাপশন বা "could not process" ত্রুটি পুরোপুরি নির্মূল করা হয়েছে।
+            - **কিবোর্ড শর্টকাট:** যেকোনো অ্যাপে কার্সর রেখে **`F8`** অথবা **`Ctrl+Shift+Space`** চেপে কথা বললেই সরাসরি টাইপ হয়ে যাবে।
           files: release-files/**
           draft: false
           prerelease: false

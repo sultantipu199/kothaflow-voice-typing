@@ -233,10 +233,24 @@
       if (isRecording) return;
       try {
         if (!audioStream) {
-          audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              channelCount: 1,
+              sampleRate: 16000,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          });
         }
         audioChunks = [];
-        mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+
+        let mimeType = 'audio/webm';
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        }
+
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType });
 
         mediaRecorder.ondataavailable = (event) => {
           if (event.data && event.data.size > 0) {
@@ -245,11 +259,21 @@
         };
 
         mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          if (audioChunks.length === 0) {
+            resetToIdle();
+            return;
+          }
+          const blob = new Blob(audioChunks, { type: mimeType });
+          if (blob.size < 600) {
+            transcriptText.innerText = 'অডিও খুব ছোট';
+            setTimeout(resetToIdle, 800);
+            return;
+          }
           await transcribeAndCommit(blob);
         };
 
-        mediaRecorder.start(100);
+        // Record atomically without timeslices so WebM container is 100% complete and valid
+        mediaRecorder.start();
         showRecordingPill();
       } catch (err) {
         console.error('Audio capture error:', err);
@@ -287,38 +311,64 @@
       let apiKey = await getStoredGroqKey();
 
       if (!apiKey) {
-        transcriptText.innerText = 'Groq API Key পাওয়া যায়নি';
+        transcriptText.innerText = 'Groq API Key সেট নেই';
         setTimeout(resetToIdle, 1500);
         return;
       }
 
       try {
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'recording.webm');
-        formData.append('model', 'whisper-large-v3');
-        formData.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
-        if (currentLang === 'bn-BD') {
-          formData.append('prompt', 'বাংলা ভাষায় কথোপকথন ও শুদ্ধ ভয়েস টাইপিং। যেমন: কেমন আছেন, ধন্যবাদ, আমি ভালো আছি, ইনশাআল্লাহ, দাঁড়ি।');
+        let finalSpoken = '';
+
+        // Attempt 1: Full Whisper-Large-v3
+        try {
+          const form1 = new FormData();
+          form1.append('file', audioBlob, 'speech.webm');
+          form1.append('model', 'whisper-large-v3');
+          form1.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
+          form1.append('response_format', 'json');
+
+          const resp1 = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+            body: form1
+          });
+          const d1 = await resp1.json();
+          if (d1 && d1.text && d1.text.trim()) {
+            finalSpoken = d1.text.trim();
+          }
+        } catch (e1) {
+          console.warn('Attempt 1 whisper-large-v3 failed:', e1);
         }
-        formData.append('response_format', 'json');
 
-        const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: formData
-        });
+        // Attempt 2: Fallback to Whisper-Large-v3-Turbo if needed
+        if (!finalSpoken) {
+          try {
+            const form2 = new FormData();
+            form2.append('file', audioBlob, 'speech.webm');
+            form2.append('model', 'whisper-large-v3-turbo');
+            form2.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
+            form2.append('response_format', 'json');
 
-        const data = await response.json();
-        if (data && data.text && data.text.trim()) {
-          let finalSpoken = data.text.trim();
+            const resp2 = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${apiKey}` },
+              body: form2
+            });
+            const d2 = await resp2.json();
+            if (d2 && d2.text && d2.text.trim()) {
+              finalSpoken = d2.text.trim();
+            }
+          } catch (e2) {
+            console.warn('Attempt 2 whisper-large-v3-turbo failed:', e2);
+          }
+        }
 
-          // 🧠 AI Brain Enhancement: Polish grammar, clean fillers, and add perfect punctuation
+        if (finalSpoken) {
+          // 🧠 AI Brain Enhancement: Polish Bengali grammar & punctuation (with 2.5s safe timeout)
           if (currentLang === 'bn-BD') {
             try {
               transcriptText.innerText = 'AI ব্রেইন সাজাচ্ছে...';
-              const brainResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              const brainFetch = fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${apiKey}`,
@@ -336,30 +386,35 @@
                   temperature: 0.1,
                   max_tokens: 400
                 })
-              });
-              const brainData = await brainResp.json();
+              }).then(r => r.json());
+
+              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500));
+              const brainData = await Promise.race([brainFetch, timeoutPromise]);
+
               if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
                 const cleanedText = brainData.choices[0].message.content.trim();
-                if (cleanedText) {
+                if (cleanedText && cleanedText.length > 0) {
                   finalSpoken = cleanedText;
                 }
               }
             } catch (brainErr) {
-              console.log('AI Brain bypass to raw transcript:', brainErr);
+              console.log('AI Brain safe fallback to raw transcript:', brainErr);
             }
           }
 
           transcriptText.innerText = finalSpoken;
           ipcRenderer.send('commit-speech', finalSpoken);
           setTimeout(resetToIdle, 700);
-        } else if (data && data.error) {
-          transcriptText.innerText = 'ত্রুটি: ' + (data.error.message || 'API error');
-          setTimeout(resetToIdle, 2000);
         } else {
           transcriptText.innerText = 'কোনো কথা শনাক্ত হয়নি';
           setTimeout(resetToIdle, 1000);
         }
       } catch (err) {
+        console.error('Transcription error:', err);
+        transcriptText.innerText = 'সার্ভার কানেকশন ত্রুটি';
+        setTimeout(resetToIdle, 1500);
+      }
+    }
         console.error('Transcription error:', err);
         transcriptText.innerText = 'সার্ভার কানেকশন ত্রুটি';
         setTimeout(resetToIdle, 1500);
