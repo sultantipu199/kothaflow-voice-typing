@@ -162,6 +162,46 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textAllCaps="false" />
+
+            <!-- Android 13/14 Restricted Settings Unlock Guide -->
+            <LinearLayout
+                android:id="@+id/cardRestrictedHelp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#1E293B"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚠️ 'Controlled by restricted setting' সমাধান:"
+                    android:textColor="#F59E0B"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="১. নিচের বাটনে চাপ দিন (App Info পেজ খুলবে)।\n২. একদম উপরের ডান কোণায় থাকা ৩টি ডট (⋮) এ চাপ দিন।\n৩. 'Allow restricted settings' (বা 'সীমাবদ্ধ সেটিংসের অনুমতি দিন') চাপুন এবং ফোনের ফিঙ্গারপ্রিন্ট বা পিন দিন।\n৪. এরপর ব্যাক করে এসে উপরের বাটনে চাপ দিয়ে অ্যাক্সেসিবিলিটি অন করে নিন!"
+                    android:textColor="#CBD5E1"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="10dp" />
+
+                <Button
+                    android:id="@+id/btnFixRestrictedSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:text="🔓 ১-ক্লিকে App Info খুলুন এবং আনলক করুন"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- CARD 3: Voice Test Lab -->

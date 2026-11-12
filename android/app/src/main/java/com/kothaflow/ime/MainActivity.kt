@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvMicStatus: TextView
     private lateinit var btnEnableKeyboard: Button
     private lateinit var btnSelectKeyboard: Button
+    private lateinit var btnFixRestrictedSettings: Button
+    private lateinit var cardRestrictedHelp: android.view.View
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
@@ -54,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         tvMicStatus = findViewById(R.id.tvMicStatus)
         btnEnableKeyboard = findViewById(R.id.btnEnableKeyboard)
         btnSelectKeyboard = findViewById(R.id.btnSelectKeyboard)
+        btnFixRestrictedSettings = findViewById(R.id.btnFixRestrictedSettings)
+        cardRestrictedHelp = findViewById(R.id.cardRestrictedHelp)
 
         // 1. Floating Bubble Toggle
         btnToggleBubble.setOnClickListener {
@@ -70,6 +74,20 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "তালিকা থেকে 'KothaFlow Auto-Type' চালু করুন", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Toast.makeText(this, "অ্যাক্সেসিবিলিটি সেটিংস খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 2b. Unlock Android 13/14 Restricted Settings via App Info
+        btnFixRestrictedSettings.setOnClickListener {
+            try {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(intent)
+                Toast.makeText(this, "উপরের ৩টি ডট (⋮) চেপে 'Allow restricted settings' দিন", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "App Info খুলতে ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -120,10 +138,12 @@ class MainActivity : AppCompatActivity() {
             tvAccessStatusBadge.text = "🟢 সক্রিয় আছে"
             tvAccessStatusBadge.setTextColor(0xFF10B981.toInt())
             btnEnableAccessibility.text = "✓ স্বয়ংক্রিয় টাইপিং চালু আছে"
+            cardRestrictedHelp.visibility = android.view.View.GONE
         } else {
             tvAccessStatusBadge.text = "⚠️ বন্ধ আছে"
             tvAccessStatusBadge.setTextColor(0xFFF59E0B.toInt())
             btnEnableAccessibility.text = "অ্যাক্সেসিবিলিটি অনুমতি দিন (অন করুন)"
+            cardRestrictedHelp.visibility = android.view.View.VISIBLE
         }
     }
 
