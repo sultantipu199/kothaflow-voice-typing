@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.0.9.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.0.9.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.9.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.0.9.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.1.0.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.1.0.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.0.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.1.0.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -59,12 +59,19 @@ jobs:
         run: |
           cd desktop
           npm install
-          npx electron-builder --win portable --publish never
+          npx electron-builder --win nsis portable --publish never
           cd ..
           New-Item -ItemType Directory -Force -Path build-output
-          $exeFile = Get-ChildItem -Path desktop/dist/*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($exeFile) {
-            Copy-Item $exeFile.FullName -Destination build-output/KothaFlow-Desktop-Portable.exe -Force
+          $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($setupFile) {
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.1.0.exe -Force
+          }
+          $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $portableFile) {
+            $portableFile = Get-ChildItem -Path desktop/dist/*.exe -Exclude *Setup* -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if ($portableFile) {
+            Copy-Item $portableFile.FullName -Destination build-output/KothaFlow-Desktop-Portable.exe -Force
           }
           Compress-Archive -Path desktop/* -DestinationPath build-output/KothaFlow-Desktop-Windows-v1.0.zip -Force
 
@@ -101,22 +108,28 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.9
+          tag_name: v1.1.0
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.0.9 — Direct Auto-Typing in Active Input Box (Desktop & Mobile)
+          name: KothaFlow v1.1.0 — Desktop Shortcut, Hold-to-Speak & Direct Voice Auto-Typing
           body: |
-            ## 🎙️ KothaFlow Studio v1.0.9 — Direct Download Links
+            ## 🎙️ KothaFlow Studio v1.1.0 — Direct Download Links
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.0.9/KothaFlow-Desktop-Portable.exe)**
-              - *Easiest 1-Click Run:* Just download and double-click! NO Node.js required, NO installation required, NO zip extraction needed. Opens immediately as a watery floating bubble!
-              - *Direct Auto-Typing:* Automatically types directly into the write box (Notepad, Word, WhatsApp, Chrome, etc.) at the cursor!
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.9/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Alternative Zip Bundle:* Extract and double-click `run-windows.bat`. Works on any Windows laptop.
+            - **[KothaFlow-Desktop-Setup-v1.1.0.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Setup-v1.1.0.exe)**
+              - *Official Windows Installer:* Installs KothaFlow with 1-click and **automatically creates a Desktop Shortcut icon** on your Windows desktop!
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Portable.exe)**
+              - *Standalone Portable:* Runs instantly without installation. Also auto-creates a Desktop shortcut on launch!
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-Desktop-Windows-v1.0.zip)**
+              - *Zip Bundle:* Extract and double-click `run-windows.bat`.
+
+            ### ⌨️ Desktop Features:
+            - **Hold-to-Speak:** মাউস দিয়ে বাবলে চাপ দিয়ে ধরে কথা বলুন, ছেড়ে দিলেই সক্রিয় রাইট বক্সে লেখা স্বয়ংক্রিয়ভাবে টাইপ হয়ে যাবে!
+            - **Dedicated Global Shortcut Key:** কীবোর্ডে **`F8`** অথবা **`Ctrl+Shift+Space`** চাপলেই ভয়েস রেকর্ড শুরু হবে এবং পুনরায় চাপলে সাথে সাথে কার্সরে টাইপ হয়ে যাবে!
+            - **Auto-Silence Detection:** কথা বলা শেষ করে থামলেই বাবলটি নিজে নিজে কথাটি বক্সে টাইপ করে দেবে!
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.0.9.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.9/KothaFlow-VoiceTyping-v1.0.9.apk)**
-              - *Features:* Direct writing into active input box in Messenger, WhatsApp, Chrome, Notes; custom avatar icon; watery translucent bubble; free dragging anywhere on screen!
+            - **[KothaFlow-VoiceTyping-v1.1.0.apk](https://github.com/${{ github.repository }}/releases/download/v1.1.0/KothaFlow-VoiceTyping-v1.1.0.apk)**
+              - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
           files: release-files/**
           draft: false
           prerelease: false

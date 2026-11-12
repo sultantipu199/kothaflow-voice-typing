@@ -186,7 +186,9 @@ class FloatingBubbleService : Service() {
             private var initialTouchX = 0f
             private var initialTouchY = 0f
             private var isDragging = false
+            private var isHoldingToSpeak = false
             private var touchStartTime = 0L
+            private var holdRunnable: Runnable? = null
 
             override fun onTouch(v: View?, event: MotionEvent): Boolean {
                 when (event.action) {
@@ -196,26 +198,41 @@ class FloatingBubbleService : Service() {
                         initialTouchX = event.rawX
                         initialTouchY = event.rawY
                         isDragging = false
+                        isHoldingToSpeak = false
                         touchStartTime = System.currentTimeMillis()
 
                         bubbleIdleView?.animate()?.alpha(1.0f)?.setDuration(100)?.start()
-                        return true // Must return true to receive ACTION_MOVE and ACTION_UP
+
+                        // Hold-to-speak: after 300ms holding without dragging, start recording!
+                        holdRunnable = Runnable {
+                            if (!isDragging) {
+                                isHoldingToSpeak = true
+                                vibrateDevice()
+                                startListening()
+                            }
+                        }
+                        mainHandler.postDelayed(holdRunnable!!, 300)
+                        return true
                     }
                     MotionEvent.ACTION_MOVE -> {
                         val dx = (event.rawX - initialTouchX).toInt()
                         val dy = (event.rawY - initialTouchY).toInt()
 
-                        if (abs(dx) > 8 || abs(dy) > 8) {
-                            isDragging = true
-                            params?.x = initialX + dx
-                            params?.y = initialY + dy
-                            try {
-                                windowManager?.updateViewLayout(floatingView, params)
-                            } catch (_: Exception) {}
+                        if (abs(dx) > 10 || abs(dy) > 10) {
+                            if (!isHoldingToSpeak) {
+                                isDragging = true
+                                holdRunnable?.let { mainHandler.removeCallbacks(it) }
+                                params?.x = initialX + dx
+                                params?.y = initialY + dy
+                                try {
+                                    windowManager?.updateViewLayout(floatingView, params)
+                                } catch (_: Exception) {}
+                            }
                         }
                         return true
                     }
                     MotionEvent.ACTION_UP -> {
+                        holdRunnable?.let { mainHandler.removeCallbacks(it) }
                         val dx = (event.rawX - initialTouchX).toInt()
                         val dy = (event.rawY - initialTouchY).toInt()
                         val touchDuration = System.currentTimeMillis() - touchStartTime
@@ -224,18 +241,28 @@ class FloatingBubbleService : Service() {
                             bubbleIdleView?.animate()?.alpha(0.35f)?.setDuration(250)?.start()
                         }
 
-                        if (!isDragging && abs(dx) < 12 && abs(dy) < 12) {
-                            if (touchDuration > 600) {
-                                // Long press: Toggle language or hide
+                        if (isHoldingToSpeak) {
+                            // User held to speak and now released! Immediately stop and auto-type into write box!
+                            isHoldingToSpeak = false
+                            vibrateDevice()
+                            stopListeningAndCommit()
+                            return true
+                        }
+
+                        if (!isDragging && abs(dx) < 14 && abs(dy) < 14) {
+                            if (touchDuration > 1000) {
                                 toggleLanguageOrHide()
                             } else {
-                                // Click: Start recording
+                                // Tap: Toggle start/stop
                                 vibrateDevice()
-                                startListening()
+                                if (!isRecording) {
+                                    startListening()
+                                } else {
+                                    stopListeningAndCommit()
+                                }
                             }
                             return true
                         } else if (isDragging) {
-                            // Free dragging: Keep wherever the user places it, clamped safely inside screen
                             clampToScreenBounds()
                             return true
                         }

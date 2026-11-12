@@ -35,15 +35,16 @@
       position: relative;
       opacity: 0.35;
       backdrop-filter: blur(6px);
-      transition: opacity 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      transition: opacity 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
     }
     #idleBubble:active {
       cursor: grabbing;
       opacity: 1;
+      transform: scale(0.96);
     }
     #idleBubble:hover {
       opacity: 0.95;
-      transform: scale(1.08);
+      transform: scale(1.06);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 18px rgba(56, 189, 248, 0.5);
     }
     .avatar-img {
@@ -170,7 +171,7 @@
 <body>
 
   <!-- Watery Idle Bubble with User Avatar -->
-  <div id="idleBubble" title="ক্লিক করে কথা বলুন (টেনে সরানো যায়, ডান-ক্লিকে মেনু)">
+  <div id="idleBubble" title="চেপে ধরে কথা বলুন (ছেড়ে দিলে সাথে সাথে টাইপ হবে) | শর্টকাট: F8">
     <img src="avatar.png" class="avatar-img" alt="KothaFlow Avatar" />
     <svg class="mic-icon" viewBox="0 0 24 24">
       <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -188,24 +189,15 @@
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
     </div>
-    <div id="transcriptText" class="transcript-box">কথা বলুন...</div>
-    <button id="btnDone" class="btn-action btn-done" title="টাইপ করুন (Paste)">✓</button>
+    <div id="transcriptText" class="transcript-box">শুনছি... মুখে বলুন...</div>
+    <button id="btnDone" class="btn-action btn-done" title="টাইপ সম্পন্ন করুন">✓</button>
     <button id="btnCancel" class="btn-action btn-cancel" title="বাতিল করুন">✕</button>
   </div>
 
   <script>
     const hasElectron = typeof window !== 'undefined' && typeof window.require === 'function';
     const ipcRenderer = hasElectron ? window.require('electron').ipcRenderer : {
-      send: (channel, data) => {
-        console.log('IPC fallback:', channel, data);
-        if (channel === 'commit-speech' && data) {
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(data).then(() => {
-              console.log('Copied to clipboard:', data);
-            });
-          }
-        }
-      },
+      send: (channel, data) => { console.log('IPC fallback:', channel, data); },
       on: () => {}
     };
 
@@ -217,126 +209,76 @@
     const btnCancel = document.getElementById('btnCancel');
 
     let currentLang = 'bn-BD';
-    let recognition = null;
     let isRecording = false;
-    let spokenResult = '';
     let silenceTimer = null;
 
-    function resetSilenceTimer() {
-      if (silenceTimer) clearTimeout(silenceTimer);
-      silenceTimer = setTimeout(() => {
-        if (isRecording && (spokenResult || (transcriptText.innerText && transcriptText.innerText !== 'শুনছি... মুখে বলুন...'))) {
-          stopAndCommit();
-        }
-      }, 1600);
-    }
-
-    // Initialize Web Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    function startRecording() {
-      if (isRecording) return;
+    function showRecordingPill() {
       isRecording = true;
-      spokenResult = '';
-      transcriptText.innerText = 'শুনছি... মুখে বলুন...';
-
       ipcRenderer.send('set-bubble-mode', 'expanded');
       idleBubble.style.display = 'none';
       recordingPill.style.display = 'flex';
-
-      if (!SpeechRecognition) {
-        transcriptText.innerText = 'স্পিচ ইঞ্জিন পাওয়া যায়নি';
-        return;
-      }
-
-      try {
-        recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = currentLang;
-
-        recognition.onresult = (event) => {
-          let interim = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              spokenResult += event.results[i][0].transcript;
-            } else {
-              interim += event.results[i][0].transcript;
-            }
-          }
-          transcriptText.innerText = spokenResult || interim || 'শুনছি...';
-          resetSilenceTimer();
-        };
-
-        recognition.onerror = (e) => {
-          console.error(e);
-        };
-
-        recognition.onend = () => {
-          if (isRecording) {
-            try { recognition.start(); } catch(_) {}
-          }
-        };
-
-        recognition.start();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function cleanText(text) {
-      let clean = text || '';
-      const fillers = [' um ', ' uh ', ' ah ', ' আর কি ', ' এই যে ', ' আআ '];
-      fillers.forEach(f => {
-        clean = clean.replace(new RegExp(f, 'gi'), ' ');
-      });
-      return clean.trim().replace(/\s+/g, ' ');
-    }
-
-    function stopAndCommit() {
-      if (!isRecording) return;
-      if (silenceTimer) clearTimeout(silenceTimer);
-      isRecording = false;
-      if (recognition) {
-        try { recognition.stop(); } catch(_) {}
-      }
-
-      const finalCleaned = cleanText(spokenResult || transcriptText.innerText);
-      if (finalCleaned && finalCleaned !== 'শুনছি... মুখে বলুন...' && finalCleaned !== 'কথা বলুন...') {
-        ipcRenderer.send('commit-speech', finalCleaned);
-      }
-
-      resetToIdle();
-    }
-
-    function cancelRecording() {
-      if (silenceTimer) clearTimeout(silenceTimer);
-      isRecording = false;
-      if (recognition) {
-        try { recognition.stop(); } catch(_) {}
-      }
-      resetToIdle();
+      transcriptText.innerText = 'শুনছি... মুখে বলুন...';
     }
 
     function resetToIdle() {
+      isRecording = false;
+      if (silenceTimer) clearTimeout(silenceTimer);
       ipcRenderer.send('set-bubble-mode', 'compact');
       recordingPill.style.display = 'none';
       idleBubble.style.display = 'flex';
-      spokenResult = '';
     }
 
-    // Smooth Drag & Click Handler (100% reliable across all Desktop monitors)
+    // IPC Events from Main process
+    ipcRenderer.on('recording-started', (event, lang) => {
+      showRecordingPill();
+    });
+
+    ipcRenderer.on('worker-text-stream', (event, text) => {
+      if (text && text.trim() !== '') {
+        transcriptText.innerText = text;
+        // Silence detection: 1.6s of silence auto-commits
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+          if (isRecording) {
+            ipcRenderer.send('stop-speech-hold');
+          }
+        }, 1600);
+      }
+    });
+
+    ipcRenderer.on('recording-stopped', () => {
+      resetToIdle();
+    });
+
+    // Language switch
+    ipcRenderer.on('switch-lang', (event, lang) => {
+      currentLang = lang;
+      langBadge.innerText = lang === 'bn-BD' ? 'বা' : 'EN';
+    });
+
+    // Smooth Drag & Mouse Hold-to-Speak Handling
     let isMouseDown = false;
     let startScreenX = 0;
     let startScreenY = 0;
     let hasDragged = false;
+    let holdTimer = null;
+    let isHoldingToSpeak = false;
 
     idleBubble.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return; // Only left-click drags or clicks
+      if (e.button !== 0) return; // Only left-click
       isMouseDown = true;
       hasDragged = false;
+      isHoldingToSpeak = false;
       startScreenX = e.screenX;
       startScreenY = e.screenY;
+
+      // Hold-to-speak: after 220ms holding without drag, start speech recognition!
+      holdTimer = setTimeout(() => {
+        if (isMouseDown && !hasDragged) {
+          isHoldingToSpeak = true;
+          ipcRenderer.send('start-speech-hold');
+        }
+      }, 220);
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -344,8 +286,9 @@
       const dx = e.screenX - startScreenX;
       const dy = e.screenY - startScreenY;
 
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
         hasDragged = true;
+        if (holdTimer) clearTimeout(holdTimer);
         startScreenX = e.screenX;
         startScreenY = e.screenY;
         ipcRenderer.send('move-bubble', { dx, dy });
@@ -353,11 +296,17 @@
     });
 
     window.addEventListener('mouseup', (e) => {
-      if (isMouseDown) {
-        isMouseDown = false;
-        if (!hasDragged) {
-          startRecording();
-        }
+      if (!isMouseDown) return;
+      isMouseDown = false;
+      if (holdTimer) clearTimeout(holdTimer);
+
+      if (isHoldingToSpeak) {
+        // User held to speak and now released! Immediately stop and auto-type!
+        isHoldingToSpeak = false;
+        ipcRenderer.send('stop-speech-hold');
+      } else if (!hasDragged) {
+        // Short tap/click: toggle recording
+        ipcRenderer.send('toggle-speech-click');
       }
     });
 
@@ -368,27 +317,19 @@
 
     btnDone.addEventListener('click', (e) => {
       e.stopPropagation();
-      stopAndCommit();
+      ipcRenderer.send('stop-speech-hold');
     });
 
     btnCancel.addEventListener('click', (e) => {
       e.stopPropagation();
-      cancelRecording();
+      resetToIdle();
     });
 
-    // Hotkey listener from main process
-    ipcRenderer.on('toggle-recording-hotkey', () => {
-      if (!isRecording) {
-        startRecording();
-      } else {
-        stopAndCommit();
+    // Also clicking anywhere on the recording pill commits speech
+    recordingPill.addEventListener('click', (e) => {
+      if (e.target !== btnCancel && !btnCancel.contains(e.target)) {
+        ipcRenderer.send('stop-speech-hold');
       }
-    });
-
-    // Language switch
-    ipcRenderer.on('switch-lang', (event, lang) => {
-      currentLang = lang;
-      langBadge.innerText = lang === 'bn-BD' ? 'বা' : 'EN';
     });
   </script>
 </body>

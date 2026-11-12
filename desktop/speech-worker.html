@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>KothaFlow Desktop Speech Worker</title>
+</head>
+<body style="background:#0f172a; color:#f8fafc; font-family:sans-serif;">
+  <div id="status">KothaFlow Speech Worker Initializing...</div>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let currentLang = 'bn-BD';
+    let isListening = false;
+    let currentText = '';
+    const statusDiv = document.getElementById('status');
+
+    function initRecognition() {
+      if (!SpeechRecognition) {
+        statusDiv.innerText = 'Speech Recognition Not Supported';
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = currentLang;
+
+      recognition.onstart = () => {
+        statusDiv.innerText = 'Listening (' + currentLang + ')...';
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        let final = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        currentText = final || interim;
+        statusDiv.innerText = currentText;
+
+        // Post transcript update back to Electron
+        fetch('/transcribe-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: currentText, isFinal: false })
+        }).catch(() => {});
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('Speech error:', e.error);
+        statusDiv.innerText = 'Error: ' + e.error;
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          try { recognition.start(); } catch(_) {}
+        } else {
+          statusDiv.innerText = 'Idle';
+        }
+      };
+    }
+
+    initRecognition();
+
+    // Long-polling loop to receive commands from Electron
+    async function pollCommands() {
+      while (true) {
+        try {
+          const res = await fetch('/get-command');
+          const data = await res.json();
+          if (data && data.action === 'start') {
+            currentLang = data.lang || currentLang;
+            currentText = '';
+            if (recognition) {
+              recognition.lang = currentLang;
+              isListening = true;
+              try { recognition.start(); } catch(_) {}
+            }
+          } else if (data && data.action === 'stop') {
+            isListening = false;
+            if (recognition) {
+              try { recognition.stop(); } catch(_) {}
+            }
+            // Send final transcription
+            fetch('/transcribe-update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: currentText, isFinal: true })
+            }).catch(() => {});
+          }
+        } catch (e) {
+          await new Promise(r => setTimeout(r, 400));
+        }
+      }
+    }
+
+    pollCommands();
+  </script>
+</body>
+</html>
