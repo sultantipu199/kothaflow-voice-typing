@@ -161,18 +161,6 @@ class FloatingBubbleService : Service() {
 
         tvBubbleLangBadge?.text = currentLangShort
 
-        // Switch language on long click of idle bubble
-        bubbleIdleView?.setOnLongClickListener {
-            toggleLanguage()
-            true
-        }
-
-        // Tap on bubble starts recording
-        bubbleIdleView?.setOnClickListener {
-            vibrateDevice()
-            startListening()
-        }
-
         // Done button in recording pill
         btnPillDone?.setOnClickListener {
             stopListeningAndCommit()
@@ -198,6 +186,7 @@ class FloatingBubbleService : Service() {
             private var initialTouchX = 0f
             private var initialTouchY = 0f
             private var isDragging = false
+            private var touchStartTime = 0L
 
             override fun onTouch(v: View?, event: MotionEvent): Boolean {
                 when (event.action) {
@@ -207,14 +196,16 @@ class FloatingBubbleService : Service() {
                         initialTouchX = event.rawX
                         initialTouchY = event.rawY
                         isDragging = false
-                        bubbleIdleView?.animate()?.alpha(1.0f)?.setDuration(120)?.start()
-                        return false // Allow click listener to trigger if not dragged
+                        touchStartTime = System.currentTimeMillis()
+
+                        bubbleIdleView?.animate()?.alpha(1.0f)?.setDuration(100)?.start()
+                        return true // Must return true to receive ACTION_MOVE and ACTION_UP
                     }
                     MotionEvent.ACTION_MOVE -> {
                         val dx = (event.rawX - initialTouchX).toInt()
                         val dy = (event.rawY - initialTouchY).toInt()
 
-                        if (abs(dx) > 10 || abs(dy) > 10) {
+                        if (abs(dx) > 8 || abs(dy) > 8) {
                             isDragging = true
                             params?.x = initialX + dx
                             params?.y = initialY + dy
@@ -222,18 +213,33 @@ class FloatingBubbleService : Service() {
                                 windowManager?.updateViewLayout(floatingView, params)
                             } catch (_: Exception) {}
                         }
-                        return isDragging
+                        return true
                     }
                     MotionEvent.ACTION_UP -> {
+                        val dx = (event.rawX - initialTouchX).toInt()
+                        val dy = (event.rawY - initialTouchY).toInt()
+                        val touchDuration = System.currentTimeMillis() - touchStartTime
+
                         if (!isRecording) {
                             bubbleIdleView?.animate()?.alpha(0.35f)?.setDuration(250)?.start()
                         }
-                        if (isDragging) {
-                            // Snap to edge
-                            snapToNearestEdge()
+
+                        if (!isDragging && abs(dx) < 12 && abs(dy) < 12) {
+                            if (touchDuration > 600) {
+                                // Long press: Toggle language or hide
+                                toggleLanguageOrHide()
+                            } else {
+                                // Click: Start recording
+                                vibrateDevice()
+                                startListening()
+                            }
+                            return true
+                        } else if (isDragging) {
+                            // Free dragging: Keep wherever the user places it, clamped safely inside screen
+                            clampToScreenBounds()
                             return true
                         }
-                        return false
+                        return true
                     }
                 }
                 return false
@@ -241,21 +247,24 @@ class FloatingBubbleService : Service() {
         })
     }
 
-    private fun snapToNearestEdge() {
+    private fun clampToScreenBounds() {
         val metrics = resources.displayMetrics
         val screenWidth = metrics.widthPixels
-        val currentX = params?.x ?: 0
+        val screenHeight = metrics.heightPixels
+        val viewWidth = floatingView?.width ?: 120
+        val viewHeight = floatingView?.height ?: 120
 
-        val targetX = if (currentX + 50 > screenWidth / 2) {
-            screenWidth - (floatingView?.width ?: 120) - 20
-        } else {
-            20
-        }
+        params?.x = (params?.x ?: 0).coerceIn(0, screenWidth - viewWidth)
+        params?.y = (params?.y ?: 0).coerceIn(40, screenHeight - viewHeight - 40)
 
-        params?.x = targetX
         try {
             windowManager?.updateViewLayout(floatingView, params)
         } catch (_: Exception) {}
+    }
+
+    private fun toggleLanguageOrHide() {
+        vibrateDevice()
+        toggleLanguage()
     }
 
     private fun toggleLanguage() {

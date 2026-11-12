@@ -80,15 +80,30 @@ app.whenReady().then(() => {
     }
   });
 
+  // Smooth Dragging anywhere across desktop via IPC
+  ipcMain.on('move-bubble', (event, { dx, dy }) => {
+    if (!bubbleWindow) return;
+    const [x, y] = bubbleWindow.getPosition();
+    bubbleWindow.setPosition(x + dx, y + dy);
+  });
+
   // Handle transcribed text commit from UI
   ipcMain.on('commit-speech', (event, text) => {
     pasteAtCursor(text);
+  });
+
+  // Hide bubble request
+  ipcMain.on('hide-bubble', () => {
+    if (bubbleWindow) bubbleWindow.hide();
   });
 
   // Global hotkey: Ctrl+Shift+Space (Mac: Command+Shift+Space)
   const hotkey = process.platform === 'darwin' ? 'Command+Shift+Space' : 'Ctrl+Shift+Space';
   globalShortcut.register(hotkey, () => {
     if (bubbleWindow) {
+      if (!bubbleWindow.isVisible()) {
+        bubbleWindow.show();
+      }
       bubbleWindow.webContents.send('toggle-recording-hotkey');
     }
   });
@@ -99,7 +114,8 @@ app.whenReady().then(() => {
       { label: '🇧🇩 বাংলা ভাষা', click: () => bubbleWindow.webContents.send('switch-lang', 'bn-BD') },
       { label: '🇺🇸 English', click: () => bubbleWindow.webContents.send('switch-lang', 'en-US') },
       { type: 'separator' },
-      { label: 'KothaFlow বন্ধ করুন (Exit)', click: () => app.quit() }
+      { label: '👁️ বাবল হাইড করুন (Hide Bubble)', click: () => bubbleWindow.hide() },
+      { label: '❌ KothaFlow বন্ধ করুন (Exit)', click: () => app.quit() }
     ]);
     contextMenu.popup(BrowserWindow.fromWebContents(event.sender));
   });

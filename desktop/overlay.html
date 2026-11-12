@@ -31,12 +31,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      cursor: grab;
       position: relative;
-      -webkit-app-region: drag;
       opacity: 0.35;
       backdrop-filter: blur(6px);
       transition: opacity 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    #idleBubble:active {
+      cursor: grabbing;
+      opacity: 1;
     }
     #idleBubble:hover {
       opacity: 0.95;
@@ -60,7 +63,7 @@
       border-radius: 50%;
       padding: 2px;
       fill: #38bdf8;
-      -webkit-app-region: no-drag;
+      pointer-events: none;
     }
     .lang-badge {
       position: absolute;
@@ -72,7 +75,7 @@
       font-weight: 800;
       padding: 1px 3px;
       border-radius: 5px;
-      -webkit-app-region: no-drag;
+      pointer-events: none;
     }
 
     /* 2. Expanded Recording Pill */
@@ -88,7 +91,7 @@
       gap: 10px;
       box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.35);
       backdrop-filter: blur(16px);
-      -webkit-app-region: drag;
+      cursor: grab;
     }
     .record-dot {
       width: 12px;
@@ -296,9 +299,40 @@
       spokenResult = '';
     }
 
-    // Click triggers
-    idleBubble.addEventListener('click', (e) => {
-      startRecording();
+    // Smooth Drag & Click Handler (100% reliable across all Desktop monitors)
+    let isMouseDown = false;
+    let startScreenX = 0;
+    let startScreenY = 0;
+    let hasDragged = false;
+
+    idleBubble.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // Only left-click drags or clicks
+      isMouseDown = true;
+      hasDragged = false;
+      startScreenX = e.screenX;
+      startScreenY = e.screenY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) return;
+      const dx = e.screenX - startScreenX;
+      const dy = e.screenY - startScreenY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasDragged = true;
+        startScreenX = e.screenX;
+        startScreenY = e.screenY;
+        ipcRenderer.send('move-bubble', { dx, dy });
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (isMouseDown) {
+        isMouseDown = false;
+        if (!hasDragged) {
+          startRecording();
+        }
+      }
     });
 
     idleBubble.addEventListener('contextmenu', (e) => {
