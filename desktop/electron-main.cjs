@@ -35,16 +35,26 @@ function pasteAtCursor(text) {
   if (!text || text.trim() === '') return;
   clipboard.writeText(text.trim() + ' ');
 
-  // Small delay to let target application gain active focus, then simulate Ctrl+V
+  // Release focus back to previous target app (Word, Notepad, Chrome, WhatsApp)
+  if (bubbleWindow) {
+    bubbleWindow.blur();
+  }
+
+  // Instant native paste simulation at cursor
   setTimeout(() => {
     if (process.platform === 'win32') {
-      exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; Start-Sleep -Milliseconds 60; $w.SendKeys('^v')"`);
+      const vbsPath = path.join(__dirname, 'paste.vbs');
+      exec(`wscript //nologo "${vbsPath}"`, (err) => {
+        if (err) {
+          exec(`powershell -WindowStyle Hidden -Command "$w = New-Object -ComObject wscript.shell; $w.SendKeys('^v')"`);
+        }
+      });
     } else if (process.platform === 'darwin') {
-      exec(`osascript -e 'delay 0.06' -e 'tell application "System Events" to keystroke "v" using command down'`);
+      exec(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
     } else {
-      exec(`sleep 0.06 && xdotool key ctrl+v`);
+      exec(`xdotool key ctrl+v`);
     }
-  }, 100);
+  }, 40);
 }
 
 app.whenReady().then(() => {

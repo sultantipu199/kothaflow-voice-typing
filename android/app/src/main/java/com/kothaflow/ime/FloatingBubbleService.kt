@@ -136,7 +136,9 @@ class FloatingBubbleService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -299,6 +301,9 @@ class FloatingBubbleService : Service() {
                 override fun onEndOfSpeech() {
                     mainHandler.post {
                         tvPillText?.text = "প্রসেসিং হচ্ছে..."
+                        try {
+                            speechRecognizer?.stopListening()
+                        } catch (_: Exception) {}
                     }
                 }
 
@@ -367,15 +372,18 @@ class FloatingBubbleService : Service() {
             vibrateDevice()
 
             val accessibilityService = KothaFlowAccessibilityService.instance
+            var directlyTyped = false
             if (accessibilityService != null) {
-                accessibilityService.insertTextIntoFocusedInput(text)
-                Toast.makeText(this, "✓ টাইপ করা হয়েছে", Toast.LENGTH_SHORT).show()
+                directlyTyped = accessibilityService.insertTextIntoFocusedInput(text)
+            }
+
+            if (directlyTyped) {
+                Toast.makeText(this, "✓ সরাসরি টাইপ সম্পন্ন হয়েছে", Toast.LENGTH_SHORT).show()
             } else {
-                // If accessibility is not enabled, copy to clipboard
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 val clip = android.content.ClipData.newPlainText("KothaFlow Text", text)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "✓ টেক্সট কপি হয়েছে (পেস্ট করুন)", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "✓ টেক্সট প্রস্তুত (ক্লিপবোর্ডে কপি করা হয়েছে)", Toast.LENGTH_SHORT).show()
             }
         }
 
