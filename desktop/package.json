@@ -18,6 +18,13 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "electron-main.cjs",
+      "overlay.html",
+      "paste.vbs",
+      "avatar.png",
+      "icon.ico"
+    ],
     "win": {
       "target": [
         "portable"

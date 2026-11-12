@@ -1,8 +1,9 @@
-const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu, Tray } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 
 let bubbleWindow = null;
+let tray = null;
 let isRecording = false;
 
 function createBubbleWindow() {
@@ -21,6 +22,7 @@ function createBubbleWindow() {
     skipTaskbar: false,
     resizable: false,
     hasShadow: true,
+    icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -63,6 +65,37 @@ function pasteAtCursor(text) {
 
 app.whenReady().then(() => {
   createBubbleWindow();
+
+  // Create System Tray icon (bottom right taskbar)
+  try {
+    const iconPath = path.join(__dirname, 'icon.ico');
+    tray = new Tray(iconPath);
+    const trayMenu = Menu.buildFromTemplate([
+      { label: '🎙️ KothaFlow Voice Typing', enabled: false },
+      { type: 'separator' },
+      {
+        label: '👁️ বাবল দেখান / লুকান',
+        click: () => {
+          if (!bubbleWindow) return;
+          if (bubbleWindow.isVisible()) bubbleWindow.hide();
+          else bubbleWindow.show();
+        }
+      },
+      { label: '🇧🇩 বাংলা ভাষা', click: () => bubbleWindow && bubbleWindow.webContents.send('switch-lang', 'bn-BD') },
+      { label: '🇺🇸 English', click: () => bubbleWindow && bubbleWindow.webContents.send('switch-lang', 'en-US') },
+      { type: 'separator' },
+      { label: '❌ বন্ধ করুন (Exit)', click: () => app.quit() }
+    ]);
+    tray.setToolTip('KothaFlow Voice Typing (Ctrl+Shift+Space)');
+    tray.setContextMenu(trayMenu);
+    tray.on('click', () => {
+      if (!bubbleWindow) return;
+      if (bubbleWindow.isVisible()) bubbleWindow.hide();
+      else bubbleWindow.show();
+    });
+  } catch (err) {
+    console.log('Tray note:', err.message);
+  }
 
   // Resize window when switching between compact bubble and expanded pill
   ipcMain.on('set-bubble-mode', (event, mode) => {

@@ -194,7 +194,20 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron');
+    const hasElectron = typeof window !== 'undefined' && typeof window.require === 'function';
+    const ipcRenderer = hasElectron ? window.require('electron').ipcRenderer : {
+      send: (channel, data) => {
+        console.log('IPC fallback:', channel, data);
+        if (channel === 'commit-speech' && data) {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(data).then(() => {
+              console.log('Copied to clipboard:', data);
+            });
+          }
+        }
+      },
+      on: () => {}
+    };
 
     const idleBubble = document.getElementById('idleBubble');
     const recordingPill = document.getElementById('recordingPill');
