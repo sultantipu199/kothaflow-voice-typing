@@ -1,112 +1,23 @@
 const { app, BrowserWindow, globalShortcut, clipboard, ipcMain, Menu, Tray, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const http = require('http');
-const { spawn, exec } = require('child_process');
+const { exec } = require('child_process');
 const autoHealer = require('./auto-healer.cjs');
 
 let bubbleWindow = null;
 let tray = null;
 let isRecording = false;
 let currentLang = 'bn-BD';
-let edgeProcess = null;
-let pendingCommandResolver = null;
-let latestSpokenText = '';
 
-// 1. Local HTTP Speech Worker Server on 127.0.0.1:39485
-const server = http.createServer((req, res) => {
-  if (req.url === '/speech-worker.html') {
-    const workerPath = path.join(__dirname, 'speech-worker.html');
-    fs.readFile(workerPath, 'utf8', (err, content) => {
-      if (err) {
-        res.writeHead(500);
-        res.end('Error loading worker');
-      } else {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(content);
-      }
-    });
-  } else if (req.url === '/get-command') {
-    pendingCommandResolver = (cmd) => {
-      try {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(cmd));
-      } catch (_) {}
-    };
-  } else if (req.url === '/transcribe-update') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      try {
-        const data = JSON.parse(body);
-        latestSpokenText = data.text || '';
-        if (bubbleWindow) {
-          bubbleWindow.webContents.send('worker-text-stream', data.text);
-        }
-        if (data.isFinal && isRecording) {
-          isRecording = false;
-          pasteAtCursor(data.text);
-          if (bubbleWindow) {
-            bubbleWindow.webContents.send('recording-stopped');
-          }
-        }
-      } catch (_) {}
-      res.writeHead(200);
-      res.end('ok');
-    });
-  } else {
-    res.writeHead(404);
-    res.end();
-  }
-});
-
-server.listen(39485, '127.0.0.1', () => {
-  console.log('[KothaFlow] Speech worker server running on http://127.0.0.1:39485');
-});
-
-function sendWorkerCommand(cmd) {
-  if (pendingCommandResolver) {
-    const resolver = pendingCommandResolver;
-    pendingCommandResolver = null;
-    resolver(cmd);
-  }
-}
-
-// 2. Launch Silent Background Edge Speech Bridge with Auto-Healing Watchdog
-function launchEdgeWorker() {
+function ensureDesktopShortcut() {
   if (process.platform !== 'win32') return;
+  try {
+    const exePath = process.execPath;
+    if (!exePath || path.basename(exePath).toLowerCase().includes('electron')) return;
 
-  const edgePaths = [
-    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-  ];
-
-  const exe = edgePaths.find(p => fs.existsSync(p));
-  if (exe) {
-    try {
-      const url = 'http://127.0.0.1:39485/speech-worker.html';
-      const args = [
-        `--app=${url}`,
-        '--window-position=-3000,-3000',
-        '--window-size=200,200',
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--disable-extensions'
-      ];
-      edgeProcess = spawn(exe, args, { detached: true, stdio: 'ignore' });
-      console.log('[KothaFlow AutoHeal] Background Edge Speech Bridge launched.');
-
-      // Auto-healing Watchdog: If Edge process ever dies, auto-heal and respawn in 1.5s
-      edgeProcess.on('exit', () => {
-        console.log('[KothaFlow AutoHeal] Speech worker exited, auto-healing respawn in 1.5s...');
-        edgeProcess = null;
-        setTimeout(launchEdgeWorker, 1500);
-      });
-    } catch (err) {
-      console.warn('[KothaFlow AutoHeal] Could not launch Edge Speech Bridge:', err.message);
-    }
-  }
+    const script = `$w = New-Object -ComObject WScript.Shell; $d = [System.Environment]::GetFolderPath('Desktop'); $lnk = Join-Path $d 'KothaFlow.lnk'; if (-not (Test-Path $lnk)) { $s = $w.CreateShortcut($lnk); $s.TargetPath = '${exePath.replace(/'/g, "''")}'; $s.Description = 'KothaFlow Voice Typing (Wispr Flow Style)'; $s.Save(); }`;
+    exec(`powershell -WindowStyle Hidden -Command "${script}"`);
+  } catch (_) {}
 }
 
 function createBubbleWindow() {
@@ -125,7 +36,7 @@ function createBubbleWindow() {
     skipTaskbar: true,
     resizable: false,
     hasShadow: true,
-    focusable: false, // Prevents taking focus away from Word, Notepad, Chrome, WhatsApp!
+    focusable: false, // Never steals keyboard focus from Word, Notepad, Chrome, WhatsApp!
     icon: path.join(__dirname, 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
@@ -140,34 +51,6 @@ function createBubbleWindow() {
   bubbleWindow.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
-function startListening() {
-  if (isRecording) return;
-  isRecording = true;
-  latestSpokenText = '';
-  sendWorkerCommand({ action: 'start', lang: currentLang });
-  if (bubbleWindow) {
-    bubbleWindow.webContents.send('recording-started', currentLang);
-  }
-}
-
-function stopListeningAndPaste() {
-  if (!isRecording) return;
-  sendWorkerCommand({ action: 'stop' });
-
-  // Backup fallback: if worker does not return final within 800ms, paste whatever was heard
-  setTimeout(() => {
-    if (isRecording) {
-      isRecording = false;
-      if (latestSpokenText) {
-        pasteAtCursor(latestSpokenText);
-      }
-      if (bubbleWindow) {
-        bubbleWindow.webContents.send('recording-stopped');
-      }
-    }
-  }, 800);
-}
-
 function pasteAtCursor(rawText) {
   if (!rawText || rawText.trim() === '') return;
 
@@ -178,7 +61,7 @@ function pasteAtCursor(rawText) {
   const toPaste = cleaned.trim() + ' ';
   clipboard.writeText(toPaste);
 
-  // Directly paste into the active cursor in Word, Notepad, Chrome, WhatsApp
+  // Directly paste into active cursor in Word, Notepad, Chrome, WhatsApp
   setTimeout(() => {
     if (process.platform === 'win32') {
       const vbsPath = path.join(__dirname, 'paste.vbs');
@@ -195,20 +78,8 @@ function pasteAtCursor(rawText) {
   }, 30);
 }
 
-function ensureDesktopShortcut() {
-  if (process.platform !== 'win32') return;
-  try {
-    const exePath = process.execPath;
-    if (!exePath || path.basename(exePath).toLowerCase().includes('electron')) return;
-
-    const script = `$w = New-Object -ComObject WScript.Shell; $d = [System.Environment]::GetFolderPath('Desktop'); $lnk = Join-Path $d 'KothaFlow.lnk'; if (-not (Test-Path $lnk)) { $s = $w.CreateShortcut($lnk); $s.TargetPath = '${exePath.replace(/'/g, "''")}'; $s.Description = 'KothaFlow Voice Typing (Wispr Flow Style)'; $s.Save(); }`;
-    exec(`powershell -WindowStyle Hidden -Command "${script}"`);
-  } catch (_) {}
-}
-
 app.whenReady().then(() => {
   createBubbleWindow();
-  launchEdgeWorker();
   ensureDesktopShortcut();
 
   // Auto-Healing: Clamp window position on screen resolution change
@@ -248,6 +119,12 @@ app.whenReady().then(() => {
         }
       },
       { type: 'separator' },
+      {
+        label: '🔑 Groq API Key সেট করুন',
+        click: () => {
+          bubbleWindow && bubbleWindow.webContents.send('open-api-modal');
+        }
+      },
       { label: '🛡️ অটো-হিলিং ও প্রাইভেসি: সক্রিয়', enabled: false },
       {
         label: '🔄 নতুন আপডেট চেক করুন',
@@ -288,7 +165,7 @@ app.whenReady().then(() => {
     console.log('Tray note:', err.message);
   }
 
-  // Bubble Mode resize
+  // Bubble Mode resize (compact vs expanded)
   ipcMain.on('set-bubble-mode', (event, mode) => {
     if (!bubbleWindow) return;
     const { screen } = require('electron');
@@ -313,48 +190,26 @@ app.whenReady().then(() => {
     bubbleWindow.setPosition(x + dx, y + dy);
   });
 
-  // Hold-to-speak via Mouse
-  ipcMain.on('start-speech-hold', () => {
-    startListening();
-  });
-
-  ipcMain.on('stop-speech-hold', () => {
-    stopListeningAndPaste();
-  });
-
-  // Toggle click
-  ipcMain.on('toggle-speech-click', () => {
-    if (!isRecording) {
-      startListening();
-    } else {
-      stopListeningAndPaste();
-    }
-  });
-
-  // Commit text from renderer (fallback)
+  // Commit text from renderer and auto-paste directly into active write box
   ipcMain.on('commit-speech', (event, text) => {
     pasteAtCursor(text);
   });
 
-  // Language switch from renderer
+  // Language switch
   ipcMain.on('set-language', (event, lang) => {
     currentLang = lang;
   });
 
-  // Global Shortcuts: F8 & Ctrl+Shift+Space
+  // Global Shortcuts: F8 & Ctrl+Shift+Space (Push-to-Talk / Toggle)
   globalShortcut.register('F8', () => {
-    if (!isRecording) {
-      startListening();
-    } else {
-      stopListeningAndPaste();
+    if (bubbleWindow) {
+      bubbleWindow.webContents.send('toggle-recording-hotkey');
     }
   });
 
   globalShortcut.register('Ctrl+Shift+Space', () => {
-    if (!isRecording) {
-      startListening();
-    } else {
-      stopListeningAndPaste();
+    if (bubbleWindow) {
+      bubbleWindow.webContents.send('toggle-recording-hotkey');
     }
   });
 
@@ -376,6 +231,12 @@ app.whenReady().then(() => {
         }
       },
       { type: 'separator' },
+      {
+        label: '🔑 Groq API Key সেট করুন',
+        click: () => {
+          bubbleWindow.webContents.send('open-api-modal');
+        }
+      },
       { label: '⌨️ শর্টকাট: F8 বা Ctrl+Shift+Space', enabled: false },
       { label: '🛡️ অটো-হিলিং ইঞ্জিন: সক্রিয়', enabled: false },
       {
@@ -414,10 +275,4 @@ app.whenReady().then(() => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
-  server.close();
-  if (edgeProcess && !edgeProcess.killed) {
-    try {
-      process.kill(edgeProcess.pid);
-    } catch (_) {}
-  }
 });
