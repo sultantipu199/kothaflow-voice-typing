@@ -87,6 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
+          target_commitish: ${{ github.sha }}
           name: KothaFlow v1.0.0 — Android APK & Desktop Release
           body: |
             ## 🎙️ KothaFlow Studio — Direct Download Links
@@ -98,9 +99,7 @@ jobs:
             ### 💻 Desktop (Windows & Mac):
             - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.0.0/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Installation:* Extract ZIP on your PC, double-click `run-windows.bat`. Press `Ctrl+Shift+Space` in any app (Word, Notepad, Chrome) to dictate!
-          files: |
-            release-files/KothaFlow-VoiceTyping-v1.0.apk
-            release-files/KothaFlow-Desktop-Windows-v1.0.zip
+          files: release-files/**
           draft: false
           prerelease: false
         env:
