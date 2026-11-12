@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>KothaFlow Floating Bar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    .pill {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      border-radius: 9999px;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(12px);
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 1.2s infinite;
+    }
+    .status-text {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .hint {
+      font-size: 11px;
+      color: #94a3b8;
+      border-left: 1px solid #334155;
+      padding-left: 10px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+  <div class="pill">
+    <div class="dot"></div>
+    <div class="status-text">KothaFlow শুনছে... কথা বলুন</div>
+    <div class="hint">Ctrl+Shift+Space চাপুন</div>
+  </div>
+</body>
+</html>
