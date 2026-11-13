@@ -120,7 +120,16 @@ class KothaFlowAccessibilityService : AccessibilityService() {
                 targetNode.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
 
                 // Strategy A: Direct ACTION_SET_TEXT (Instantly puts text into the write box)
-                val currentText = targetNode.text?.toString() ?: ""
+                val rawCurrent = targetNode.text?.toString() ?: ""
+                val hint = targetNode.hintText?.toString()
+                val isHintShowing = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && targetNode.isShowingHintText)
+
+                val currentText = if (isHintShowing || isPlaceholderText(rawCurrent, hint)) {
+                    ""
+                } else {
+                    rawCurrent
+                }
+
                 val combinedText = if (currentText.isEmpty()) {
                     textToInsert
                 } else if (currentText.endsWith(" ")) {
@@ -157,6 +166,23 @@ class KothaFlowAccessibilityService : AccessibilityService() {
         }
 
         return false
+    }
+
+    private fun isPlaceholderText(text: String, hintText: String?): Boolean {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return true
+        if (!hintText.isNullOrBlank() && trimmed.equals(hintText.trim(), ignoreCase = true)) {
+            return true
+        }
+        val placeholders = setOf(
+            "message", "messages", "type a message", "type a message...", "write a message", "write a message...",
+            "send a message", "send a message...", "start a chat", "chat", "text", "text message",
+            "মেসেজ", "বার্তা", "একটি বার্তা লিখুন", "একটি বার্তা লিখুন...", "মেসেজ লিখুন", "মেসেজ লিখুন...",
+            "কিছু লিখুন", "কিছু লিখুন...", "কী ভাবছেন?", "কী ভাবছেন", "মতামত দিন", "মতামত দিন...",
+            "write something", "write something...", "say something", "say something...",
+            "search", "খুঁজুন", "অনুসন্ধান", "comment", "comment..."
+        )
+        return placeholders.contains(trimmed.lowercase())
     }
 
     private fun copyToClipboard(text: String) {
