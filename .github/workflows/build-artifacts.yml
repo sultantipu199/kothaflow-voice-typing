@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.1.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.1.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.1.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.1.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.2.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.2.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.2.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.2.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.1.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.2.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -117,32 +117,32 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.1
+          tag_name: v1.2.2
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.2.1 — Ultimate Bengali Accuracy (Whisper Large v3 + Llama 3.3 70B)
+          name: KothaFlow v1.2.2 — Enhanced Question Punctuation (?) & Watermark Elimination
           body: |
-            ## 🎙️ KothaFlow Studio v1.2.1 — State-of-the-Art Bengali Voice Typing
+            ## 🎙️ KothaFlow Studio v1.2.2 — Question Mark Auto-Insertion & Clean Insertion
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.2.1.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.1/KothaFlow-Desktop-Setup-v1.2.1.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.2.2.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.2/KothaFlow-Desktop-Setup-v1.2.2.exe)**
               - *1-Click Windows Installer:* Installs KothaFlow and **creates a Desktop Shortcut**!
-              - *Supreme Bengali Accuracy:* Whisper-Large-v3 (Full 32-layer) with comprehensive Bengali language grounding prompt.
-              - *AI Proofreader & Punctuation:* Llama 3.3 70B Brain automatically fixes phonetic spelling and adds perfect punctuation (।, ?, !).
-              - *Hardware Noise Suppression:* Browser-level audio constraints for crisp, crystal-clear voice capture.
+              - *স্বয়ংক্রিয় প্রশ্নবোধক চিহ্ন (?):* কোনো প্রশ্নবাচক কথা বললেই স্বয়ংক্রিয়ভাবে প্রশ্নবোধক চিহ্ন বসে যাবে।
+              - *ক্লিন ইনপুট (Zero Watermark / Zero Prefix):* মেসেঞ্জার, ইমু বা যেকোনো চ্যাটবক্সের ওয়াটারমার্ক বা লেবেল ("মেসেজ:", "Message:") কখনোই টাইপ হবে না। শুধু আপনার কণ্ঠের আসল কথাটুকু টাইপ হবে।
+              - *Whisper-Large-v3 + Llama 3.3 70B:* সর্বোচ্চ নির্ভুলতার সাথে বাংলা বানান ও যুক্তবর্ণ শুদ্ধকরণ।
               - *Native Win32 Paste Engine:* Instantly types speech directly into active text field in Notepad, Word, Chrome, WhatsApp!
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.1/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.2/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.1/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.2/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.2.1.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.1/KothaFlow-VoiceTyping-v1.2.1.apk)**
+            - **[KothaFlow-VoiceTyping-v1.2.2.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.2/KothaFlow-VoiceTyping-v1.2.2.apk)**
               - *Hold-to-Speak on Mobile:* বাবলে আঙুল চেপে ধরে কথা বলুন, ছেড়ে দিলে সরাসরি মেসেঞ্জার/হোয়াটসঅ্যাপের ইনপুট বক্সে লেখা বসে যাবে!
 
-            ### 🚀 Highlights in v1.2.1:
-            - **হুইস্পার লার্জ ৩২-লেয়ার মডেল:** টার্বো মডেলের বদলে মূল Whisper-Large-v3 সক্রিয় করা হয়েছে বাংলা কথা ১০০% সঠিকভাবে বোঝার জন্য।
-            - **নয়েজ ফিল্টারিং ও অটো-গেইন:** অডিও নয়েজ সাপ্রেশন ও ইকো ক্যান্সেলেশন যুক্ত করায় ব্যাকগ্রাউন্ডের শব্দ দূর হয়ে শুধু মানুষের কথা স্পষ্টভাবে ক্যাপচার হবে।
-            - **এআই প্রুফরিডার:** লামা ৩.৩ ৭০বি মডেল যুক্তবর্ণ ও যতিচিহ্ন নির্ভুলভাবে সাজিয়ে দেবে।
+            ### 🚀 Highlights in v1.2.2:
+            - **প্রশ্নবোধক চিহ্ন (?) স্বয়ংক্রিয় সংযোজন:** "কী", "কেন", "কোথায়", "কখন", "কিভাবে", "কেমন" ইত্যাদি প্রশ্নবাচক বাক্য শনাক্ত করে স্বয়ংক্রিয়ভাবে প্রশ্নবোধক চিহ্ন (?) বসানো হবে।
+            - **মেসেঞ্জার ও ইমু ওয়াটারমার্ক রিমুভাল:** এআই বা সিস্টেমের কোনো কৃত্রিম প্রিফিক্স (যেমন "মেসেজ:", "বার্তা:", "Message:") টাইপ হবে না, কেবল ব্যবহারকারীর উচ্চারিত কণ্ঠস্বরই টাইপ হবে।
+            - **উন্নত অডিও ক্যাপচার ও ফিল্টারিং:** নয়েজ ক্যান্সেলেশন ও গেইন কন্ট্রোল আরও শক্তিশালী করা হয়েছে।
           files: release-files/**
           draft: false
           prerelease: false

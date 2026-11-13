@@ -58,6 +58,12 @@ class KothaFlowAutoHealer {
 
     let text = rawText;
 
+    // 0. Remove any accidental label or watermark prefixes (e.g. মেসেজ:, Message:, বার্তা:)
+    text = text
+      .replace(/^(মেসেজ|বার্তা|উত্তর|টেক্সট|প্রতিলিপি|সংশোধিত রূপ|সংশোধন|আউটপুট|Message|Output|Text|Response)\s*[:：\-–—]\s*/i, '')
+      .replace(/^["'“”‘’](.*)["'“”‘’]$/s, '$1')
+      .trim();
+
     // 1. Remove verbal hesitation fillers
     const fillers = [
       /\b(um|uh|ah|er)\b/gi,
@@ -81,7 +87,15 @@ class KothaFlowAutoHealer {
       .replace(/\s+([,।\?!])/g, '$1') // Remove spaces before punctuation
       .replace(/([,।\?!])(?=[^\s])/g, '$1 '); // Ensure space after punctuation
 
-    // 4. Learn word frequencies safely on local device
+    // 4. Smart Interrogative Detection: If sentence contains Bengali question words, add question mark (?)
+    const questionWords = /(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\s*কি|আছো\s*কি|পারবে\s*কি|যাবে\s*কি)/;
+    if (questionWords.test(text)) {
+      if (text.endsWith('।') || !/[।\?!]$/.test(text)) {
+        text = text.replace(/[।\.]$/, '').trim() + '?';
+      }
+    }
+
+    // 5. Learn word frequencies safely on local device
     const words = text.split(/\s+/);
     words.forEach(w => {
       if (w.length > 2) {

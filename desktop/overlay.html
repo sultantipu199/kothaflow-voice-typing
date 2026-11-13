@@ -444,7 +444,7 @@
                   messages: [
                     {
                       role: 'system',
-                      content: 'You are the ultimate Bengali language specialist and proofreader. Correct any phonetic ASR errors and broken conjuncts (যুক্তবর্ণ), and insert natural punctuation (।, ?, !). Never change the intended meaning, never summarize, and never omit words. Output ONLY the resulting Bengali text directly with zero explanations.'
+                      content: 'You are the ultimate Bengali language specialist and punctuation master. Correct any phonetic speech recognition errors and broken conjuncts (যুক্তবর্ণ), and insert precise punctuation marks (দাঁড়ি ।, কমা ,, প্রশ্নবোধক চিহ্ন ?). If a sentence is interrogative or asks a question (contains question words like কি, কী, কেন, কোথায়, কখন, কিভাবে, কেমন, কার, কাকে, কত, নাকি, ইত্যাদি), you MUST end it with a question mark (?). Never change the original words or meaning, never summarize, and never omit words. Output ONLY the clean Bengali text. Never include any labels or prefixes like "মেসেজ:", "বার্তা:", "Message:", "উত্তর:", and never wrap in quotes.'
                     },
                     { role: 'user', content: finalSpoken }
                   ],
@@ -459,6 +459,18 @@
               if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
                 let cleanedText = brainData.choices[0].message.content.trim();
                 cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                // Strip any artificial prefixes or labels (like মেসেজ:, বার্তা:, Message:)
+                cleanedText = cleanedText.replace(/^(মেসেজ|বার্তা|উত্তর|টেক্সট|প্রতিলিপি|সংশোধিত রূপ|সংশোধন|আউটপুট|Message|Output|Text|Response)\s*[:：\-–—]\s*/i, '');
+                cleanedText = cleanedText.replace(/^["'“”‘’](.*)["'“”‘’]$/s, '$1').trim();
+
+                // Smart Bengali Question punctuation fallback
+                const questionWords = /(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\s*কি|আছো\s*কি|পারবে\s*কি|যাবে\s*কি)/;
+                if (questionWords.test(cleanedText)) {
+                  if (cleanedText.endsWith('।') || !/[।\?!]$/.test(cleanedText)) {
+                    cleanedText = cleanedText.replace(/[।\.]$/, '').trim() + '?';
+                  }
+                }
+
                 if (cleanedText && cleanedText.length > 0) {
                   finalSpoken = cleanedText;
                 }
