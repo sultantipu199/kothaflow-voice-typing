@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.6.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.6.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.6.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.6.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.7.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.7.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.7.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.7.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -81,7 +81,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.6.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.7.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -125,31 +125,23 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.6
+          tag_name: v1.2.7
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.2.6 — Multilingual (Bangla & English) Voice Typing & Play Protect Clean APK
+          name: KothaFlow v1.2.7 — Direct In-Place Voice Typing & Play Protect Clean Accessibility Config
           body: |
-            ## 🎙️ KothaFlow Studio v1.2.6 — Multilingual Bengali & English Typing + Safe Mobile Install
-
-            ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.2.6.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.6/KothaFlow-Desktop-Setup-v1.2.6.exe)**
-              - *1-Click Windows Installer:* Installs KothaFlow and **creates a Desktop Shortcut**!
-              - *উভয় ভাষা সাপোর্ট (বাংলা ও ইংরেজি):* এখন বাংলায় বললে খাঁটি বাংলা এবং ইংরেজিতে বললে সঠিক বানান ও ক্যাপিটালাইজেশনসহ নিখুঁত ইংরেজি টাইপ হবে।
-              - *১-ক্লিক ভাষা পরিবর্তন:* বাবলের 'বা / EN' ব্যাজে ক্লিক করেই সরাসরি ভাষা পরিবর্তন করা যাবে।
-              - *Left Alt হটকি (Wispr Flow স্টাইল):* কীবোর্ডের `Left Alt` একবার ট্যাপ অথবা হোল্ড করে কথা বললেই সরাসরি কার্সরে পেস্ট হবে।
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.6/KothaFlow-Desktop-Portable.exe)**
-              - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.6/KothaFlow-Desktop-Windows-v1.0.zip)**
-              - *Zip Bundle:* Extract and double-click `run-windows.bat`.
+            ## 🎙️ KothaFlow Studio v1.2.7 — Direct Write Box Auto-Type & Play Protect Clean
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.2.6.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.6/KothaFlow-VoiceTyping-v1.2.6.apk)**
-              - *Play Protect ক্লিন ইনস্টলেশন:* অনাবশ্যক IME পারমিশন মুক্ত করে V1/V2/V3 ডিজিটাল সিগনেচার দিয়ে সাইন করা হয়েছে।
-              - *বাইলিঙ্গুয়াল ভয়েস টাইপিং:* বাংলা এবং ইংরেজি উভয় ভাষায় সরাসরি মেসেঞ্জার, ইমু, হোয়াটসঅ্যাপে টাইপ হবে।
-              - *স্মার্ট প্রশ্নবোধক চিহ্ন (?):* বাংলা ও ইংরেজি উভয় প্রশ্নের শেষে স্বয়ংক্রিয় প্রশ্নবোধক চিহ্ন বসবে।
+            - **[KothaFlow-VoiceTyping-v1.2.7.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.7/KothaFlow-VoiceTyping-v1.2.7.apk)**
+              - *সরাসরি রাইট বক্সে টাইপিং:* কোনো ক্লিপবোর্ড বা কপি-পেস্ট ছাড়া সরাসরি মেসেঞ্জার, ইমু, হোয়াটসঅ্যাপের বক্সে তাৎক্ষণিকভাবে কথা টাইপ হবে।
+              - *প্লে প্রটেক্ট ক্লিন অ্যাক্সেসিবিলিটি কনফিগারেশন:* পূর্বের ঝুঁকিপূর্ণ `typeAllMask` সরিয়ে সুনির্দিষ্ট `typeViewFocused` ইভেন্ট ফিল্টার ব্যবহার করা হয়েছে, ফলে প্লে প্রটেক্ট একে ক্ষতিকর স্ক্রিন রেকর্ডার বা স্পাইওয়্যার ভাববে না।
+              - *দ্বিভাষিক ভয়েস টাইপিং:* বাংলা ও ইংরেজি উভয় ভাষায় নির্ভুল টাইপিং।
+              - *স্মার্ট প্রশ্নবোধক চিহ্ন (?):* প্রশ্নের শেষে স্বয়ংক্রিয় প্রশ্নবোধক চিহ্ন।
 
-            ### 🚀 Highlights in v1.2.6:
-            - **মাল্টি-ল্যাঙ্গুয়েজ ফিক্স:** ভাষা লক খুলে দেওয়া হয়েছে; বাংলা ও ইংরেজি দুটোই এখন শতভাগ নির্ভরযোগ্যভাবে টাইপ হবে।
+            ### 💻 Desktop (Windows):
+            - **[KothaFlow-Desktop-Setup-v1.2.7.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.7/KothaFlow-Desktop-Setup-v1.2.7.exe)**
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.7/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.7/KothaFlow-Desktop-Windows-v1.0.zip)**
           files: release-files/**
           draft: false
           prerelease: false
