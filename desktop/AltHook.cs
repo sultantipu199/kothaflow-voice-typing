@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 class AltHook {
     private const int WH_KEYBOARD_LL = 13;
@@ -18,11 +17,37 @@ class AltHook {
     private static bool _otherKeyPressed = false;
     private static DateTime _altPressTime = DateTime.MinValue;
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSG {
+        public IntPtr hwnd;
+        public uint message;
+        public IntPtr wParam;
+        public IntPtr lParam;
+        public uint time;
+        public int ptX;
+        public int ptY;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+
+    [DllImport("user32.dll")]
+    private static extern bool TranslateMessage([In] ref MSG lpMsg);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr DispatchMessage([In] ref MSG lpMsg);
+
     public static void Main() {
         _hookID = SetHook(_proc);
         Console.WriteLine("HOOK_READY");
         Console.Out.Flush();
-        Application.Run();
+
+        MSG msg;
+        while (GetMessage(out msg, IntPtr.Zero, 0, 0) > 0) {
+            TranslateMessage(ref msg);
+            DispatchMessage(ref msg);
+        }
+
         UnhookWindowsHookEx(_hookID);
     }
 

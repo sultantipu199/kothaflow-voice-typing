@@ -60,17 +60,61 @@ function getPasteExePath() {
       path.join(__dirname, 'paste.exe'),
       path.join(process.resourcesPath || '', 'paste.exe'),
       path.join(process.resourcesPath || '', 'app.asar.unpacked', 'paste.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'desktop', 'paste.exe'),
       path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'paste.exe')
     ];
     for (const src of sources) {
       if (fs.existsSync(src)) {
-        fs.copyFileSync(src, tempExe);
-        cachedPasteExe = tempExe;
-        return tempExe;
+        try {
+          fs.copyFileSync(src, tempExe);
+          cachedPasteExe = tempExe;
+          return tempExe;
+        } catch (_) {
+          if (fs.existsSync(tempExe)) {
+            cachedPasteExe = tempExe;
+            return tempExe;
+          }
+          return src;
+        }
       }
     }
     if (fs.existsSync(tempExe)) {
       cachedPasteExe = tempExe;
+      return tempExe;
+    }
+  } catch (e) {}
+  return null;
+}
+
+let cachedAltHookExe = null;
+function getAltHookExePath() {
+  if (cachedAltHookExe && fs.existsSync(cachedAltHookExe)) return cachedAltHookExe;
+  try {
+    const tempExe = path.join(app.getPath('temp'), 'kothaflow_alt_hook.exe');
+    const sources = [
+      path.join(__dirname, 'alt-hook.exe'),
+      path.join(process.resourcesPath || '', 'alt-hook.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'alt-hook.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'desktop', 'alt-hook.exe'),
+      path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'alt-hook.exe')
+    ];
+    for (const src of sources) {
+      if (fs.existsSync(src)) {
+        try {
+          fs.copyFileSync(src, tempExe);
+          cachedAltHookExe = tempExe;
+          return tempExe;
+        } catch (_) {
+          if (fs.existsSync(tempExe)) {
+            cachedAltHookExe = tempExe;
+            return tempExe;
+          }
+          return src;
+        }
+      }
+    }
+    if (fs.existsSync(tempExe)) {
+      cachedAltHookExe = tempExe;
       return tempExe;
     }
   } catch (e) {}
@@ -128,23 +172,19 @@ let altHookProcess = null;
 function startAltHook() {
   if (process.platform !== 'win32') return;
   try {
-    const candidatePaths = [
-      path.join(__dirname, 'alt-hook.exe'),
-      path.join(process.resourcesPath || '', 'alt-hook.exe'),
-      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'alt-hook.exe'),
-      path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'alt-hook.exe')
-    ];
-    let hookExe = null;
-    for (const p of candidatePaths) {
-      if (fs.existsSync(p)) {
-        hookExe = p;
-        break;
-      }
+    const hookExe = getAltHookExePath();
+    if (!hookExe || !fs.existsSync(hookExe)) {
+      console.warn('[AltHook] Hook executable not available; falling back to global shortcuts.');
+      return;
     }
-    if (!hookExe) return;
 
     const { spawn } = require('child_process');
     altHookProcess = spawn(hookExe, [], { windowsHide: true });
+
+    altHookProcess.on('error', (err) => {
+      console.warn('[AltHook] Process execution handled safely:', err.message);
+      altHookProcess = null;
+    });
 
     altHookProcess.stdout.on('data', (data) => {
       const text = data.toString();
@@ -152,16 +192,18 @@ function startAltHook() {
       for (const line of lines) {
         const cmd = line.trim();
         if (cmd === 'ALT_DOWN') {
-          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-down');
+          if (bubbleWindow && !bubbleWindow.isDestroyed()) bubbleWindow.webContents.send('alt-key-down');
         } else if (cmd === 'ALT_TAP') {
-          if (bubbleWindow) bubbleWindow.webContents.send('toggle-recording-hotkey');
+          if (bubbleWindow && !bubbleWindow.isDestroyed()) bubbleWindow.webContents.send('toggle-recording-hotkey');
         } else if (cmd === 'ALT_HOLD_RELEASE') {
-          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-release');
+          if (bubbleWindow && !bubbleWindow.isDestroyed()) bubbleWindow.webContents.send('alt-key-release');
         } else if (cmd === 'ALT_CANCEL') {
-          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-cancel');
+          if (bubbleWindow && !bubbleWindow.isDestroyed()) bubbleWindow.webContents.send('alt-key-cancel');
         }
       }
     });
+
+    altHookProcess.stderr.on('data', () => {});
 
     altHookProcess.on('exit', () => {
       altHookProcess = null;

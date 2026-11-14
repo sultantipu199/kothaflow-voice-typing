@@ -31,9 +31,9 @@ jobs:
       - name: Copy & Rename APK
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.4.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.4.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.4.apk build-output/KothaFlow-VoiceTyping-latest.apk
-          cp build-output/KothaFlow-VoiceTyping-v1.2.4.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
+          cp android/app/build/outputs/apk/release/*-release.apk build-output/KothaFlow-VoiceTyping-v1.2.5.apk || cp android/app/build/outputs/apk/release/*.apk build-output/KothaFlow-VoiceTyping-v1.2.5.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.5.apk build-output/KothaFlow-VoiceTyping-latest.apk
+          cp build-output/KothaFlow-VoiceTyping-v1.2.5.apk build-output/KothaFlow-VoiceTyping-v1.0.apk
 
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -63,10 +63,17 @@ jobs:
           if ($env:GROQ_SECRET_KEY) {
             Set-Content -Path "groq_key.txt" -Value $env:GROQ_SECRET_KEY -NoNewline
           }
-          $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $csc = (Get-Command csc.exe -ErrorAction SilentlyContinue).Source
+          if (-not $csc -or -not (Test-Path $csc)) {
+            $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          }
           if (Test-Path $csc) {
             & $csc /target:winexe /out:paste.exe PasteHelper.cs
             & $csc /target:winexe /out:alt-hook.exe AltHook.cs
+          }
+          if (-not (Test-Path "alt-hook.exe")) {
+            Write-Error "alt-hook.exe failed to compile!"
+            exit 1
           }
           npm install
           npx electron-builder --win nsis portable --publish never
@@ -74,7 +81,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-output
           $setupFile = Get-ChildItem -Path desktop/dist/*Setup*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($setupFile) {
-            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.4.exe -Force
+            Copy-Item $setupFile.FullName -Destination build-output/KothaFlow-Desktop-Setup-v1.2.5.exe -Force
           }
           $portableFile = Get-ChildItem -Path desktop/dist/*portable*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $portableFile) {
@@ -118,29 +125,30 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.4
+          tag_name: v1.2.5
           target_commitish: ${{ github.sha }}
-          name: KothaFlow v1.2.4 — Left Alt Hotkey Integration & Wispr Flow Push-to-Talk
+          name: KothaFlow v1.2.5 — Left Alt Hotkey & Desktop Crash Fix
           body: |
-            ## 🎙️ KothaFlow Studio v1.2.4 — Left Alt Hotkey & Push-to-Talk Support
+            ## 🎙️ KothaFlow Studio v1.2.5 — Left Alt Hotkey & Desktop Crash Resolution
 
             ### 💻 Desktop (Windows Laptop / PC):
-            - **[KothaFlow-Desktop-Setup-v1.2.4.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.4/KothaFlow-Desktop-Setup-v1.2.4.exe)**
+            - **[KothaFlow-Desktop-Setup-v1.2.5.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.5/KothaFlow-Desktop-Setup-v1.2.5.exe)**
               - *1-Click Windows Installer:* Installs KothaFlow and **creates a Desktop Shortcut**!
+              - *Uncaught Exception Fix:* Fixed `alt-hook.exe` spawn ENOENT error by compiling a standalone pure Win32 C# hook engine with zero external dependencies and graceful error isolation.
               - *Left Alt হটকি (Wispr Flow স্টাইল):* কিবোর্ডের বাঁ পাশের `Left Alt` কী একবার ট্যাপ করলে রেকর্ডিং চালু/বন্ধ হবে, অথবা চেপে ধরে রেখে কথা বলে ছেড়ে দিলেই তাৎক্ষণিকভাবে সরাসরি রাইট বক্সে লেখা পেস্ট হবে!
               - *স্মার্ট ক্যান্সেলেশন:* Alt+Tab বা Alt+F4 ব্যবহারের সময় স্বাভাবিক উইন্ডোজ নেভিগেশন বজায় থাকবে, ভুল করে ভয়েস টাইপিং ট্রিগার হবে না।
               - *F8 ও অন্যান্য শর্টকাট সক্রিয়:* Left Alt-এর পাশাপাশি F8 ও মাউস ক্লিক আগের মতোই সক্রিয় থাকবে।
-            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.4/KothaFlow-Desktop-Portable.exe)**
+            - **[KothaFlow-Desktop-Portable.exe](https://github.com/${{ github.repository }}/releases/download/v1.2.5/KothaFlow-Desktop-Portable.exe)**
               - *Standalone Portable:* Runs instantly without installation.
-            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.4/KothaFlow-Desktop-Windows-v1.0.zip)**
+            - **[KothaFlow-Desktop-Windows-v1.0.zip](https://github.com/${{ github.repository }}/releases/download/v1.2.5/KothaFlow-Desktop-Windows-v1.0.zip)**
               - *Zip Bundle:* Extract and double-click `run-windows.bat`.
 
             ### 📱 Mobile (Android):
-            - **[KothaFlow-VoiceTyping-v1.2.4.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.4/KothaFlow-VoiceTyping-v1.2.4.apk)**
+            - **[KothaFlow-VoiceTyping-v1.2.5.apk](https://github.com/${{ github.repository }}/releases/download/v1.2.5/KothaFlow-VoiceTyping-v1.2.5.apk)**
               - *মোবাইল জিরো ওয়াটারমার্ক ফিক্স:* মেসেঞ্জার বা ইমুর কোনো ডিফল্ট ওয়াটারমার্ক টাইপ হবে না।
 
-            ### 🚀 Highlights in v1.2.4:
-            - **নেটিভ Left Alt লো-লেভেল হুক:** C# ভিত্তিক উইন্ডোজ লো-লেভেল কীবোর্ড হুক যুক্ত করা হয়েছে যা কোনো ল্যাগ ছাড়া Left Alt ট্যাপ ও হোল্ড ডিটেক্ট করে।
+            ### 🚀 Highlights in v1.2.5:
+            - **রুট কজ ফিক্স:** `alt-hook.exe` লো-লেভেল হুক প্রসেস এক্সট্রাকশন এবং এরর ট্র্যাপিং সমাধান করা হয়েছে, ফলে আর কোনো জাভাস্ক্রিপ্ট আনকট এক্সেপশন পপআপ আসবে না।
           files: release-files/**
           draft: false
           prerelease: false
