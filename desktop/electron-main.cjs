@@ -124,9 +124,57 @@ function pasteAtCursor(rawText) {
   }, 45);
 }
 
+let altHookProcess = null;
+function startAltHook() {
+  if (process.platform !== 'win32') return;
+  try {
+    const candidatePaths = [
+      path.join(__dirname, 'alt-hook.exe'),
+      path.join(process.resourcesPath || '', 'alt-hook.exe'),
+      path.join(process.resourcesPath || '', 'app.asar.unpacked', 'alt-hook.exe'),
+      path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'alt-hook.exe')
+    ];
+    let hookExe = null;
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        hookExe = p;
+        break;
+      }
+    }
+    if (!hookExe) return;
+
+    const { spawn } = require('child_process');
+    altHookProcess = spawn(hookExe, [], { windowsHide: true });
+
+    altHookProcess.stdout.on('data', (data) => {
+      const text = data.toString();
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const cmd = line.trim();
+        if (cmd === 'ALT_DOWN') {
+          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-down');
+        } else if (cmd === 'ALT_TAP') {
+          if (bubbleWindow) bubbleWindow.webContents.send('toggle-recording-hotkey');
+        } else if (cmd === 'ALT_HOLD_RELEASE') {
+          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-release');
+        } else if (cmd === 'ALT_CANCEL') {
+          if (bubbleWindow) bubbleWindow.webContents.send('alt-key-cancel');
+        }
+      }
+    });
+
+    altHookProcess.on('exit', () => {
+      altHookProcess = null;
+    });
+  } catch (err) {
+    console.warn('AltHook start note:', err.message);
+  }
+}
+
 app.whenReady().then(() => {
   createBubbleWindow();
   ensureDesktopShortcut();
+  startAltHook();
 
   // Auto-Healing: Clamp window position on screen resolution change
   const { screen } = require('electron');
@@ -317,7 +365,7 @@ app.whenReady().then(() => {
           bubbleWindow && bubbleWindow.webContents.send('open-api-modal');
         }
       },
-      { label: '⌨️ শর্টকাট: F8 বা Ctrl+Shift+Space', enabled: false },
+      { label: '⌨️ শর্টকাট: Left Alt (ট্যাপ/হোল্ড) বা F8', enabled: false },
       { label: '🛡️ অটো-হিলিং ইঞ্জিন: সক্রিয়', enabled: false },
       {
         label: '🔄 নতুন আপডেট চেক করুন',
@@ -362,4 +410,8 @@ app.whenReady().then(() => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  if (altHookProcess) {
+    try { altHookProcess.kill(); } catch (_) {}
+    altHookProcess = null;
+  }
 });

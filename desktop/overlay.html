@@ -515,12 +515,36 @@
       langBadge.innerText = lang === 'bn-BD' ? 'বা' : 'EN';
     });
 
-    // Global Hotkey (F8 or Ctrl+Shift+Space)
+    // Global Hotkey (Left Alt, F8, Ctrl+Shift+Space)
     ipcRenderer.on('toggle-recording-hotkey', () => {
       if (!isRecording) {
         startListening();
       } else {
         stopListening();
+      }
+    });
+
+    let isAltHolding = false;
+    ipcRenderer.on('alt-key-down', () => {
+      isAltHolding = true;
+      if (!isRecording) {
+        startListening();
+      }
+    });
+
+    ipcRenderer.on('alt-key-release', () => {
+      if (isAltHolding) {
+        isAltHolding = false;
+        if (isRecording) {
+          stopListening();
+        }
+      }
+    });
+
+    ipcRenderer.on('alt-key-cancel', () => {
+      if (isAltHolding) {
+        isAltHolding = false;
+        resetToIdle();
       }
     });
 
