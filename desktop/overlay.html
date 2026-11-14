@@ -353,7 +353,7 @@
       return key;
     }
 
-    const BENGALI_WHISPER_PROMPT = 'আমি প্রমিত ও কথ্য বাংলা ভাষায় পরিষ্কারভাবে কথা বলছি। সঠিক বাংলা বানান, যুক্তবর্ণ ও যতিচিহ্নসহ (দাঁড়ি ।, কমা ,, প্রশ্নবোধক ?) নির্ভুলভাবে লিখুন। বাংলাদেশ, ঢাকা, প্রযুক্তি, মানুষ, জীবন, কথা, কাজ, ব্যবসা, পরিবার, ঠিক আছে, ধন্যবাদ।';
+    const MULTILINGUAL_WHISPER_PROMPT = 'আমি বাংলা এবং ইংরেজি ভাষায় কথা বলছি। Bangla and English voice dictation with proper punctuation (., ?, ।, !).';
 
     async function transcribeAndCommit(audioBlob) {
       transcriptText.innerText = 'টাইপ করা হচ্ছে...';
@@ -375,11 +375,11 @@
           const form1 = new FormData();
           form1.append('file', audioFile);
           form1.append('model', 'whisper-large-v3');
-          form1.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
-          form1.append('temperature', '0');
-          if (currentLang === 'bn-BD') {
-            form1.append('prompt', BENGALI_WHISPER_PROMPT);
+          if (currentLang === 'en-US') {
+            form1.append('language', 'en');
           }
+          form1.append('temperature', '0');
+          form1.append('prompt', MULTILINGUAL_WHISPER_PROMPT);
           form1.append('response_format', 'json');
 
           const resp1 = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
@@ -404,11 +404,11 @@
             const form2 = new FormData();
             form2.append('file', audioFile);
             form2.append('model', 'whisper-large-v3-turbo');
-            form2.append('language', currentLang === 'bn-BD' ? 'bn' : 'en');
-            form2.append('temperature', '0');
-            if (currentLang === 'bn-BD') {
-              form2.append('prompt', BENGALI_WHISPER_PROMPT);
+            if (currentLang === 'en-US') {
+              form2.append('language', 'en');
             }
+            form2.append('temperature', '0');
+            form2.append('prompt', MULTILINGUAL_WHISPER_PROMPT);
             form2.append('response_format', 'json');
 
             const resp2 = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
@@ -429,55 +429,53 @@
         }
 
         if (finalSpoken) {
-          // 🧠 AI Brain Enhancement: Polish Bengali grammar, spelling & punctuation
-          if (currentLang === 'bn-BD') {
-            try {
-              transcriptText.innerText = 'AI ব্রেইন সাজাচ্ছে...';
-              const brainFetch = fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${apiKey}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  model: 'llama-3.3-70b-versatile',
-                  messages: [
-                    {
-                      role: 'system',
-                      content: 'You are the ultimate Bengali language specialist and punctuation master. Correct any phonetic speech recognition errors and broken conjuncts (যুক্তবর্ণ), and insert precise punctuation marks (দাঁড়ি ।, কমা ,, প্রশ্নবোধক চিহ্ন ?). If a sentence is interrogative or asks a question (contains question words like কি, কী, কেন, কোথায়, কখন, কিভাবে, কেমন, কার, কাকে, কত, নাকি, ইত্যাদি), you MUST end it with a question mark (?). Never change the original words or meaning, never summarize, and never omit words. Output ONLY the clean Bengali text. Never include any labels or prefixes like "মেসেজ:", "বার্তা:", "Message:", "উত্তর:", and never wrap in quotes.'
-                    },
-                    { role: 'user', content: finalSpoken }
-                  ],
-                  temperature: 0.1,
-                  max_tokens: 450
-                })
-              }).then(r => r.json());
+          // 🧠 AI Brain Enhancement: Multilingual polish (Bengali & English grammar, spelling & punctuation)
+          try {
+            transcriptText.innerText = 'AI ব্রেইন সাজাচ্ছে...';
+            const brainFetch = fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You are an elite multilingual voice typing proofreader and punctuation specialist for Bengali and English. Correct minor speech recognition errors and insert precise punctuation marks. If the input is in Bengali, keep the original Bengali words and add Bengali punctuation (দাঁড়ি ।, কমা ,, প্রশ্নবোধক চিহ্ন ?). If the input is in English, preserve the English words with proper capitalization and English punctuation (., ,, ?). If it is a question in either language, you MUST end it with a question mark (?). Never translate from one language to another, never change the meaning or words, never summarize, never add labels or prefixes like "মেসেজ:", "Message:", and output ONLY the clean text.'
+                  },
+                  { role: 'user', content: finalSpoken }
+                ],
+                temperature: 0.1,
+                max_tokens: 450
+              })
+            }).then(r => r.json());
 
-              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200));
-              const brainData = await Promise.race([brainFetch, timeoutPromise]);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200));
+            const brainData = await Promise.race([brainFetch, timeoutPromise]);
 
-              if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
-                let cleanedText = brainData.choices[0].message.content.trim();
-                cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                // Strip any artificial prefixes or labels (like মেসেজ:, বার্তা:, Message:)
-                cleanedText = cleanedText.replace(/^(মেসেজ|বার্তা|উত্তর|টেক্সট|প্রতিলিপি|সংশোধিত রূপ|সংশোধন|আউটপুট|Message|Output|Text|Response)\s*[:：\-–—]\s*/i, '');
-                cleanedText = cleanedText.replace(/^["'“”‘’](.*)["'“”‘’]$/s, '$1').trim();
+            if (brainData && brainData.choices && brainData.choices[0] && brainData.choices[0].message) {
+              let cleanedText = brainData.choices[0].message.content.trim();
+              cleanedText = cleanedText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+              // Strip any artificial prefixes or labels (like মেসেজ:, বার্তা:, Message:)
+              cleanedText = cleanedText.replace(/^(মেসেজ|বার্তা|উত্তর|টেক্সট|প্রতিলিপি|সংশোধিত রূপ|সংশোধন|আউটপুট|Message|Output|Text|Response)\s*[:：\-–—]\s*/i, '');
+              cleanedText = cleanedText.replace(/^["'“”‘’](.*)["'“”‘’]$/s, '$1').trim();
 
-                // Smart Bengali Question punctuation fallback
-                const questionWords = /(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\s*কি|আছো\s*কি|পারবে\s*কি|যাবে\s*কি)/;
-                if (questionWords.test(cleanedText)) {
-                  if (cleanedText.endsWith('।') || !/[।\?!]$/.test(cleanedText)) {
-                    cleanedText = cleanedText.replace(/[।\.]$/, '').trim() + '?';
-                  }
-                }
-
-                if (cleanedText && cleanedText.length > 0) {
-                  finalSpoken = cleanedText;
+              // Smart Question punctuation fallback for both Bengali and English
+              const questionWords = /(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\s*কি|আছো\s*কি|পারবে\s*কি|যাবে\s*কি|\b(who|what|where|when|why|how|is|are|can|could|would|will|do|does|did)\b)/i;
+              if (questionWords.test(cleanedText)) {
+                if (cleanedText.endsWith('।') || !/[।\?!]$/.test(cleanedText)) {
+                  cleanedText = cleanedText.replace(/[।\.]$/, '').trim() + '?';
                 }
               }
-            } catch (brainErr) {
-              console.log('AI Brain safe fallback to raw transcript:', brainErr);
+
+              if (cleanedText && cleanedText.length > 0) {
+                finalSpoken = cleanedText;
+              }
             }
+          } catch (brainErr) {
+            console.log('AI Brain safe fallback to raw transcript:', brainErr);
           }
 
           transcriptText.innerText = finalSpoken;
@@ -510,6 +508,12 @@
     });
 
     // Language switch
+    langBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentLang = currentLang === 'bn-BD' ? 'en-US' : 'bn-BD';
+      langBadge.innerText = currentLang === 'bn-BD' ? 'বা' : 'EN';
+    });
+
     ipcRenderer.on('switch-lang', (event, lang) => {
       currentLang = lang;
       langBadge.innerText = lang === 'bn-BD' ? 'বা' : 'EN';

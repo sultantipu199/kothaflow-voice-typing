@@ -323,7 +323,7 @@ class FloatingBubbleService : Service() {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, currentLangCode)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, currentLangCode)
-                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, currentLangCode)
+                putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf("bn-BD", "en-US"))
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             }
 
@@ -468,8 +468,8 @@ class FloatingBubbleService : Service() {
         // Strip any artificial prefixes or labels (like মেসেজ:, Message:)
         clean = clean.replace(Regex("^(মেসেজ|বার্তা|উত্তর|টেক্সট|Message|Text)\\s*[:：\\-–—]\\s*", RegexOption.IGNORE_CASE), "").trim()
 
-        // Smart Bengali Interrogative Detection (?):
-        val questionWords = Regex("(?i)(^|\\s)(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\\s*কি|আছো\\s*কি|পারবে\\s*কি|যাবে\\s*কি)(\\s|$)")
+        // Smart Interrogative Detection (? for both Bengali & English):
+        val questionWords = Regex("(?i)(^|\\s)(কি|কী|কেন|কোথায়|কোথায়|কখন|কিভাবে|কীভাবে|কেমন|কার|কাকে|কত|নাকি|হবে\\s*কি|আছো\\s*কি|পারবে\\s*কি|যাবে\\s*কি|who|what|where|when|why|how|can|could|would|will|is|are|am|do|does|did)(\\s|$)")
         if (questionWords.containsMatchIn(clean)) {
             if (clean.endsWith("।") || !Regex("[।\\?!]$").containsMatchIn(clean)) {
                 clean = clean.replace(Regex("[।\\.]$"), "").trim() + "?"

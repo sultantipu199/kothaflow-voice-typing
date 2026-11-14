@@ -11,8 +11,8 @@ android {
         applicationId = "com.kothaflow.studio"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.2.3"
+        versionCode = 16
+        versionName = "1.2.6"
     }
 
     signingConfigs {
@@ -21,6 +21,10 @@ android {
             storePassword = "kothaflow123"
             keyAlias = "kothaflow"
             keyPassword = "kothaflow123"
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
         }
     }
 
